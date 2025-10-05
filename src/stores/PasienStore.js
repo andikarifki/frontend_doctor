@@ -1,20 +1,25 @@
+// src/stores/pasienStore.js
 import { defineStore } from "pinia";
 import api from "@/api/axios";
+// Pastikan file axios.js Anda mendukung PATCH/PUT
 
 export const usePasienStore = defineStore("pasien", {
   state: () => ({
     patients: [],
     loading: false,
-    apiResponse: null, // Untuk logging respon terakhir
+    apiResponse: null,
     apiError: null,
   }),
   actions: {
     async executeApiCall(method, endpoint, data = null) {
+      // ... (Fungsi ini tetap sama)
       this.loading = true;
       this.apiError = null;
       this.apiResponse = null;
 
       try {
+        // Karena Laravel sering menggunakan POST dengan _method:PUT/PATCH
+        // untuk form HTML, kita gunakan PUT/PATCH native di Axios.
         const response = await api({ method, url: endpoint, data });
 
         const responseData =
@@ -49,8 +54,9 @@ export const usePasienStore = defineStore("pasien", {
       }
     },
 
-    // CRUD: READ
+    // CRUD: READ (Tetap Sama)
     async fetchPatients() {
+      // ...
       try {
         const response = await this.executeApiCall("get", "pasien");
         this.patients = response.data;
@@ -59,15 +65,15 @@ export const usePasienStore = defineStore("pasien", {
       }
     },
 
-    // CRUD: CREATE (Pasien)
+    // CRUD: CREATE Pasien (Tetap Sama)
     async addPatient(formData) {
       await this.executeApiCall("post", "pasien", formData);
       await this.fetchPatients();
     },
 
-    // CRUD: CREATE (Riwayat Medis)
+    // CRUD: CREATE Riwayat Medis (Pastikan field sesuai error validasi Anda)
     async addMedicalRecord(formData) {
-      // NOTE: Sesuaikan key field dengan yang digunakan di Controller Laravel Anda
+      // Mengirim payload dengan nama field persis seperti yang diminta oleh error validasi Anda.
       const payload = {
         pasien_id: formData.pasien_id,
         diagnosis: formData.diagnosis,
@@ -75,12 +81,25 @@ export const usePasienStore = defineStore("pasien", {
         obat: formData.obat,
         lokasi_berobat: formData.lokasi_berobat,
       };
-
       await this.executeApiCall("post", "medical-records", payload);
       await this.fetchPatients();
     },
 
-    // CRUD: DELETE
+    // 🆕 CRUD: UPDATE PASIEN (PUT/PATCH)
+    async updatePatient(id, formData) {
+      // Pilihan 1: PUT Native (Paling Bersih, Umumnya Berhasil)
+      await this.executeApiCall("put", `pasien/${id}`, formData);
+
+      // Pilihan 2: POST dengan Method Spoofing (Jika PUT/PATCH gagal)
+      /*
+    const dataToSend = { ...formData, _method: 'PUT' };
+    await this.executeApiCall('post', `pasien/${id}`, dataToSend);
+    */
+
+      await this.fetchPatients(); // Refresh data pasien setelah update
+    },
+
+    // CRUD: DELETE (Tetap Sama)
     async deletePatient(id) {
       await this.executeApiCall("delete", `pasien/${id}`);
       await this.fetchPatients();
