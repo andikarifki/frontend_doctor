@@ -56,7 +56,11 @@
                         class="hover:bg-indigo-50 transition duration-100">
                         <td class="px-4 py-3 whitespace-nowrap text-sm font-medium text-gray-900">{{ pasien.id }}</td>
                         <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-600">{{ pasien.nama }}</td>
-                        <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-600">{{ pasien.tanggal }}</td>
+
+                        <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-600">
+                            {{ pasien.tanggal ? pasien.tanggal.substring(0, 10) : '-' }}
+                        </td>
+
                         <td class="px-4 py-3 whitespace-nowrap">
                             <span
                                 :class="{ 'bg-green-100 text-green-800': pasien.status === 'Selesai', 'bg-yellow-100 text-yellow-800': pasien.status === 'Terdaftar' }"
@@ -144,7 +148,7 @@ const store = usePasienStore();
 const expandedId = ref(null);
 const formVisibleId = ref(null);
 
-// 🔴 State untuk mode edit pasien
+// State untuk mode edit pasien
 const editingId = ref(null);
 const editForm = ref({ nama: '', tanggal: '', status: '' });
 
@@ -167,11 +171,12 @@ const handleEditPasien = (pasien) => {
 
     // 3. Isi form edit dengan data pasien saat ini
     // Memastikan format tanggal hanya YYYY-MM-DD (memotong bagian waktu jika ada)
+    // Logika ini sudah benar untuk mengisi <input type="date">
     const formattedDate = pasien.tanggal ? pasien.tanggal.substring(0, 10) : '';
 
     editForm.value = {
         nama: pasien.nama,
-        tanggal: formattedDate, // Format YYYY-MM-DD untuk <input type="date">
+        tanggal: formattedDate,
         status: pasien.status
     };
 
@@ -198,7 +203,7 @@ const resetMedisForm = () => {
 }
 
 const toggleRiwayat = (id) => {
-    // 🚨 Tambahkan ini untuk menutup form edit saat membuka riwayat
+    // Tutup form edit saat membuka riwayat
     editingId.value = null;
 
     resetMedisForm();
