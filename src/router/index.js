@@ -1,5 +1,4 @@
 import { createRouter, createWebHistory } from "vue-router";
-import Home from "../components/Home.vue";
 import Login from "../components/Login.vue";
 import Dashboard from "../components/Dashboard.vue";
 import PasienCreatePage from "../views/PasienCreatePage.vue";
@@ -13,11 +12,6 @@ const isAuthenticated = () => {
 const routes = [
   {
     path: "/",
-    name: "Home",
-    component: Home,
-  },
-  {
-    path: "/login",
     name: "Login",
     component: Login,
   },

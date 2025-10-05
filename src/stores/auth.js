@@ -68,7 +68,7 @@ export const useAuthStore = defineStore("auth", {
       this.user = null;
       localStorage.removeItem("authToken");
       // Redirect ke halaman login
-      this.router.push("/login");
+      this.router.push("/");
     },
   },
 });

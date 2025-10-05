@@ -1,10 +1,14 @@
 <template>
     <div class="overflow-x-auto shadow-lg rounded-lg border border-gray-200">
 
-        <section class="p-4 border-b border-gray-200 bg-gray-50">
+        <section class="p-4 border-b border-gray-200 bg-gray-50 flex justify-between items-center">
             <button @click="goToCreatePage"
                 class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded transition text-sm">
                 ➕ Tambah Pasien Baru
+            </button>
+            <button @click="handleLogout"
+                class="bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-4 rounded transition text-sm">
+                🚪 Logout
             </button>
         </section>
 
@@ -151,9 +155,18 @@ import { ref } from 'vue';
 import { usePasienStore } from '@/stores/pasienStore';
 import { useRouter } from 'vue-router';
 import { storeToRefs } from 'pinia'; // 🟢 PENTING: Untuk menjaga reactivity state Pinia
+import { useAuthStore } from '../stores/auth';
 
 const store = usePasienStore();
 const router = useRouter();
+const authStore = useAuthStore();
+
+const handleLogout = () => {
+    // Panggil aksi logout yang ada di store otentikasi
+    authStore.logout();
+    // Aksi logout di store biasanya akan menghapus token dan mengarahkan ke halaman login.
+};
+
 
 // 🟢 MENGGUNAKAN storeToRefs UNTUK STATE PINIA
 // Ini membuat 'patients' dan 'loading' menjadi ref() yang terikat ke state Pinia.
