@@ -1,5 +1,13 @@
 <template>
     <div class="overflow-x-auto shadow-lg rounded-lg border border-gray-200">
+
+        <section class="p-4 border-b border-gray-200 bg-gray-50">
+            <button @click="goToCreatePage"
+                class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded transition text-sm">
+                ➕ Tambah Pasien Baru
+            </button>
+        </section>
+
         <table class="min-w-full divide-y divide-gray-200">
             <thead class="bg-blue-800 text-white">
                 <tr>
@@ -13,14 +21,14 @@
             </thead>
 
             <tbody class="bg-white divide-y divide-gray-200">
-                <tr v-if="store.loading && !store.patients.length">
+                <tr v-if="loading && !patients.length">
                     <td colspan="5" class="px-4 py-4 text-center text-gray-500 italic">Memuat data...</td>
                 </tr>
-                <tr v-else-if="!store.patients.length && !store.loading">
+                <tr v-else-if="!patients.length && !loading">
                     <td colspan="5" class="px-4 py-4 text-center text-gray-500 italic">Belum ada data pasien.</td>
                 </tr>
 
-                <template v-for="pasien in store.patients" :key="pasien.id">
+                <template v-for="pasien in patients" :key="pasien.id">
 
                     <tr v-if="editingId === pasien.id" class="bg-yellow-100 transition duration-100">
                         <td colspan="5" class="p-4 border-t-4 border-yellow-500">
@@ -56,11 +64,9 @@
                         class="hover:bg-indigo-50 transition duration-100">
                         <td class="px-4 py-3 whitespace-nowrap text-sm font-medium text-gray-900">{{ pasien.id }}</td>
                         <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-600">{{ pasien.nama }}</td>
-
                         <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-600">
                             {{ pasien.tanggal ? pasien.tanggal.substring(0, 10) : '-' }}
                         </td>
-
                         <td class="px-4 py-3 whitespace-nowrap">
                             <span
                                 :class="{ 'bg-green-100 text-green-800': pasien.status === 'Selesai', 'bg-yellow-100 text-yellow-800': pasien.status === 'Terdaftar' }"
@@ -143,35 +149,42 @@
 <script setup>
 import { ref } from 'vue';
 import { usePasienStore } from '@/stores/pasienStore';
+import { useRouter } from 'vue-router';
+import { storeToRefs } from 'pinia'; // 🟢 PENTING: Untuk menjaga reactivity state Pinia
 
 const store = usePasienStore();
+const router = useRouter();
+
+// 🟢 MENGGUNAKAN storeToRefs UNTUK STATE PINIA
+// Ini membuat 'patients' dan 'loading' menjadi ref() yang terikat ke state Pinia.
+const { patients, loading } = storeToRefs(store);
+
+// State lokal komponen
 const expandedId = ref(null);
 const formVisibleId = ref(null);
-
-// State untuk mode edit pasien
 const editingId = ref(null);
 const editForm = ref({ nama: '', tanggal: '', status: '' });
-
-// State untuk form riwayat medis baru
 const medisForm = ref({
     tanggal_periksa: '', diagnosis: '', obat: '', lokasi_berobat: ''
 });
 
-// --- FUNGSI EDIT PASIEN (UPDATE) ---
+// ----------------------------------------------------
+// FUNGSI NAVIGASI
+// ----------------------------------------------------
+const goToCreatePage = () => {
+    router.push({ name: 'PasienCreate' });
+};
 
+// ----------------------------------------------------
+// FUNGSI EDIT PASIEN (UPDATE)
+// ----------------------------------------------------
 const handleEditPasien = (pasien) => {
-    // 1. Matikan mode edit jika pasien yang sama diklik lagi
     if (editingId.value === pasien.id) {
         editingId.value = null;
         return;
     }
-
-    // 2. Set mode edit ke ID pasien ini
     editingId.value = pasien.id;
-
-    // 3. Isi form edit dengan data pasien saat ini
-    // Memastikan format tanggal hanya YYYY-MM-DD (memotong bagian waktu jika ada)
-    // Logika ini sudah benar untuk mengisi <input type="date">
+    // Memformat tanggal dari YYYY-MM-DDTHH:MM:SS menjadi YYYY-MM-DD
     const formattedDate = pasien.tanggal ? pasien.tanggal.substring(0, 10) : '';
 
     editForm.value = {
@@ -179,33 +192,28 @@ const handleEditPasien = (pasien) => {
         tanggal: formattedDate,
         status: pasien.status
     };
-
-    // Tutup detail riwayat jika terbuka
     expandedId.value = null;
     formVisibleId.value = null;
 };
 
 const submitEdit = async (patientId) => {
     try {
-        // Panggil Pinia Store action: updatePatient(ID, DATA)
         await store.updatePatient(patientId, editForm.value);
-        editingId.value = null; // Tutup form setelah sukses
+        editingId.value = null;
     } catch (error) {
-        // Error ditangani di store, biarkan form tetap terbuka
         console.error("Gagal update pasien:", error);
     }
 };
 
-// --- FUNGSI RIWAYAT MEDIS & DELETE (Sisanya) ---
-
+// ----------------------------------------------------
+// FUNGSI RIWAYAT MEDIS & DELETE
+// ----------------------------------------------------
 const resetMedisForm = () => {
     medisForm.value = { tanggal_periksa: '', diagnosis: '', obat: '', lokasi_berobat: '' };
 }
 
 const toggleRiwayat = (id) => {
-    // Tutup form edit saat membuka riwayat
     editingId.value = null;
-
     resetMedisForm();
     formVisibleId.value = null;
     expandedId.value = expandedId.value === id ? null : id;
@@ -232,7 +240,7 @@ const submitMedis = async (patientId) => {
         formVisibleId.value = null;
         resetMedisForm();
     } catch (error) {
-        // Error ditangani di store
+        // Error handling dari store Pinia akan muncul di console/notifikasi
     }
 };
 

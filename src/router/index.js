@@ -2,6 +2,7 @@ import { createRouter, createWebHistory } from "vue-router";
 import Home from "../components/Home.vue";
 import Login from "../components/Login.vue";
 import Dashboard from "../components/Dashboard.vue";
+import PasienCreatePage from "../views/PasienCreatePage.vue";
 
 // Fungsi pengecekan otentikasi dummy
 // NANTINYA: Ganti ini dengan pengecekan Token di Local Storage!
@@ -26,6 +27,12 @@ const routes = [
     component: Dashboard,
     // Middleware untuk melindungi route
     meta: { requiresAuth: true },
+  },
+  {
+    // 🟢 Rute Halaman Tambah Pasien
+    path: "/pasien/create",
+    name: "PasienCreate", // Digunakan oleh goToCreatePage di Dashboard.vue
+    component: PasienCreatePage,
   },
 ];
 
