@@ -1,122 +1,55 @@
 <template>
-    <div class="login-container">
-        <h2>Masuk ke Akun Anda</h2>
+    <div class="max-w-md mx-auto p-6 bg-white rounded-xl shadow-lg mt-10">
 
-        <form @submit.prevent="handleLogin" class="login-form">
+        <h2 class="text-3xl font-bold text-gray-800 text-center mb-6">Masuk ke Akun Anda</h2>
+
+        <form @submit.prevent="handleLogin" class="space-y-4">
+
             <div class="form-group">
-                <label for="email">Email</label>
+                <label for="email" class="block text-sm font-medium text-gray-700 mb-1">Email</label>
                 <input id="email" type="email" v-model="email" placeholder="Masukkan email Anda" required
-                    :disabled="authStore.loading">
+                    :disabled="authStore.loading"
+                    class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition duration-150">
             </div>
 
             <div class="form-group">
-                <label for="password">Password</label>
+                <label for="password" class="block text-sm font-medium text-gray-700 mb-1">Password</label>
                 <input id="password" type="password" v-model="password" placeholder="Masukkan password Anda" required
-                    :disabled="authStore.loading">
+                    :disabled="authStore.loading"
+                    class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition duration-150">
             </div>
 
-            <button type="submit" :disabled="authStore.loading" class="btn-primary">
+            <button type="submit" :disabled="authStore.loading"
+                class="w-full py-2 px-4 bg-blue-600 text-white font-semibold rounded-lg shadow-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-75 transition duration-150">
                 {{ authStore.loading ? 'Sedang Memproses...' : 'Login' }}
             </button>
 
-            <p v-if="authStore.error" class="error-message">
+            <p v-if="authStore.error" class="text-red-600 text-sm text-center mt-3">
                 {{ authStore.error }}
             </p>
+
         </form>
     </div>
 </template>
 
 <script setup>
 import { ref } from 'vue';
-// Import Store yang berisi logika API Laravel Sanctum
 import { useAuthStore } from '@/stores/auth';
 
-// Akses Pinia Store
 const authStore = useAuthStore();
-
-// State lokal untuk menyimpan input form
 const email = ref('');
 const password = ref('');
 
-// Fungsi yang dipanggil saat form disubmit
 const handleLogin = async () => {
-    // Reset error di store sebelum mencoba login
     authStore.error = null;
 
     try {
-        // Panggil action 'login' di Pinia Store
-        // Pinia Store akan menangani: 
-        // 1. Panggilan API Laravel
-        // 2. Penyimpanan Token Sanctum
-        // 3. Redirect ke /dashboard
         await authStore.login({
             email: email.value,
             password: password.value
         });
-
-        // Catatan: Jika login berhasil, redirect terjadi di dalam action authStore.login()
-
     } catch (err) {
-        // Error ditangani di Pinia Store, kita hanya log jika perlu
         console.error("Percobaan login gagal", err);
     }
 };
 </script>
-
-<style scoped>
-/* Styling sederhana (Anda bisa menambahkan sesuai preferensi) */
-.login-container {
-    max-width: 400px;
-    margin: 50px auto;
-    padding: 20px;
-    border: 1px solid #ccc;
-    border-radius: 8px;
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-}
-
-.login-form {
-    display: flex;
-    flex-direction: column;
-}
-
-.form-group {
-    margin-bottom: 15px;
-    text-align: left;
-}
-
-label {
-    display: block;
-    margin-bottom: 5px;
-    font-weight: bold;
-}
-
-input {
-    width: 100%;
-    padding: 10px;
-    border: 1px solid #ddd;
-    border-radius: 4px;
-    box-sizing: border-box;
-    /* Pastikan padding tidak menambah lebar */
-}
-
-.btn-primary {
-    padding: 10px;
-    background-color: #3490dc;
-    color: white;
-    border: none;
-    border-radius: 4px;
-    cursor: pointer;
-    margin-top: 10px;
-}
-
-.btn-primary:disabled {
-    background-color: #a0aec0;
-    cursor: not-allowed;
-}
-
-.error-message {
-    color: red;
-    margin-top: 15px;
-    text-align: center;
-}
-</style>
