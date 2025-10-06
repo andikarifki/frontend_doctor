@@ -17,7 +17,7 @@
                 <tr>
                     <th class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider">ID</th>
                     <th class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider">Nama</th>
-                    <th class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider">Tgl. Daftar</th>
+                    <th class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider">Tanggal Lahir</th>
                     <th class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider">Status</th>
                     <th class="px-4 py-3 text-center text-xs font-medium uppercase tracking-wider w-1/4">Riwayat & Aksi
                     </th>
@@ -131,13 +131,61 @@
 
                             <div class="mt-4">
                                 <ul v-if="pasien.medical_records.length" class="space-y-2">
+
                                     <li v-for="record in pasien.medical_records" :key="record.id"
                                         class="bg-white p-3 border-l-4 border-yellow-500 shadow-sm text-sm">
-                                        <strong class="text-gray-700">Diagnosis:</strong> {{ record.diagnosis }} |
-                                        <strong class="text-gray-700">Tgl Periksa:</strong> {{ record.tanggal_periksa }}
-                                        |
-                                        <strong class="text-gray-700">Obat:</strong> {{ record.obat }} |
-                                        <strong class="text-gray-700">Lokasi:</strong> {{ record.lokasi_berobat }}
+
+                                        <div v-if="editingRecordId !== record.id"
+                                            class="flex justify-between items-start">
+                                            <div>
+                                                <strong class="text-gray-700">Diagnosis:</strong> {{ record.diagnosis }}
+                                                |
+                                                <strong class="text-gray-700">Tgl Periksa:</strong> {{
+                                                    record.tanggal_periksa }} |
+                                                <strong class="text-gray-700">Obat:</strong> {{ record.obat }} |
+                                                <strong class="text-gray-700">Lokasi:</strong> {{ record.lokasi_berobat
+                                                }}
+                                            </div>
+                                            <div class="flex space-x-2 ml-4">
+                                                <button @click="handleEditRecord(record)"
+                                                    class="bg-yellow-500 hover:bg-yellow-600 text-gray-800 text-xs py-1 px-2 rounded transition">
+                                                    Edit
+                                                </button>
+                                                <button @click="handleDeleteRecord(record.id, pasien.id)"
+                                                    class="bg-red-500 hover:bg-red-600 text-white text-xs py-1 px-2 rounded transition">
+                                                    Hapus
+                                                </button>
+                                            </div>
+                                        </div>
+
+                                        <form v-else @submit.prevent="submitEditRecord(record.id)"
+                                            class="space-y-2 p-3 border border-yellow-400 rounded-lg bg-yellow-50 shadow-inner">
+
+                                            <h6 class="text-sm font-bold text-orange-700">✏️ Edit Riwayat ID {{
+                                                record.id }}</h6>
+
+                                            <input type="date" v-model="editRecordForm.tanggal_periksa" required
+                                                class="block w-full border-gray-300 rounded-md shadow-sm p-1.5 text-xs">
+                                            <input type="text" v-model="editRecordForm.diagnosis" required
+                                                placeholder="Diagnosis"
+                                                class="block w-full border-gray-300 rounded-md shadow-sm p-1.5 text-xs">
+                                            <input type="text" v-model="editRecordForm.obat" required placeholder="Obat"
+                                                class="block w-full border-gray-300 rounded-md shadow-sm p-1.5 text-xs">
+                                            <input type="text" v-model="editRecordForm.lokasi_berobat" required
+                                                placeholder="Lokasi Berobat"
+                                                class="block w-full border-gray-300 rounded-md shadow-sm p-1.5 text-xs">
+
+                                            <div class="flex space-x-2 pt-1">
+                                                <button type="submit" :disabled="store.loading"
+                                                    class="bg-green-600 hover:bg-green-700 text-white font-bold py-1 px-2 rounded transition disabled:bg-gray-400 text-xs">
+                                                    Simpan Perubahan
+                                                </button>
+                                                <button type="button" @click="editingRecordId = null"
+                                                    class="bg-gray-500 hover:bg-gray-600 text-white font-bold py-1 px-2 rounded transition text-xs">
+                                                    Batal
+                                                </button>
+                                            </div>
+                                        </form>
                                     </li>
                                 </ul>
                                 <p v-else class="text-gray-500 italic">Belum ada riwayat medis.</p>
@@ -154,7 +202,7 @@
 import { ref } from 'vue';
 import { usePasienStore } from '@/stores/pasienStore';
 import { useRouter } from 'vue-router';
-import { storeToRefs } from 'pinia'; // 🟢 PENTING: Untuk menjaga reactivity state Pinia
+import { storeToRefs } from 'pinia';
 import { useAuthStore } from '../stores/auth';
 
 const store = usePasienStore();
@@ -162,14 +210,9 @@ const router = useRouter();
 const authStore = useAuthStore();
 
 const handleLogout = () => {
-    // Panggil aksi logout yang ada di store otentikasi
     authStore.logout();
-    // Aksi logout di store biasanya akan menghapus token dan mengarahkan ke halaman login.
 };
 
-
-// 🟢 MENGGUNAKAN storeToRefs UNTUK STATE PINIA
-// Ini membuat 'patients' dan 'loading' menjadi ref() yang terikat ke state Pinia.
 const { patients, loading } = storeToRefs(store);
 
 // State lokal komponen
@@ -178,6 +221,10 @@ const formVisibleId = ref(null);
 const editingId = ref(null);
 const editForm = ref({ nama: '', tanggal: '', status: '' });
 const medisForm = ref({
+    tanggal_periksa: '', diagnosis: '', obat: '', lokasi_berobat: ''
+});
+const editingRecordId = ref(null);
+const editRecordForm = ref({
     tanggal_periksa: '', diagnosis: '', obat: '', lokasi_berobat: ''
 });
 
@@ -262,6 +309,52 @@ const handleDeleteConfirmation = (id, nama) => {
 
     if (confirmation) {
         store.deletePatient(id);
+    }
+};
+
+// 🟢 FUNGSI BARU: HANDLE EDIT RIWAYAT MEDIS (SUDAH DIPERBAIKI)
+const handleEditRecord = (record) => {
+    if (editingRecordId.value === record.id) {
+        editingRecordId.value = null;
+        return;
+    }
+
+    editingRecordId.value = record.id;
+
+    // --- 🟢 PERBAIKAN: Format tanggal hanya YYYY-MM-DD ---
+    const formattedDate = record.tanggal_periksa
+        ? record.tanggal_periksa.substring(0, 10)
+        : '';
+    // --------------------------------------------------------
+
+    // Isi form edit dengan data record saat ini
+    editRecordForm.value = {
+        tanggal_periksa: formattedDate, // Gunakan tanggal yang sudah diformat
+        diagnosis: record.diagnosis,
+        obat: record.obat,
+        lokasi_berobat: record.lokasi_berobat,
+    };
+    // Pastikan form tambah riwayat baru tertutup
+    formVisibleId.value = null;
+};
+
+// 🟢 FUNGSI BARU: SUBMIT EDIT RIWAYAT MEDIS
+const submitEditRecord = async (recordId) => {
+    try {
+        await store.updateMedicalRecord(recordId, editRecordForm.value);
+        editingRecordId.value = null; // Tutup form setelah berhasil
+    } catch (error) {
+        console.error("Gagal update riwayat medis:", error);
+    }
+};
+
+
+// 🟢 FUNGSI BARU: HAPUS RIWAYAT MEDIS
+const handleDeleteRecord = (recordId, patientId) => {
+    const confirmation = confirm(`[KONFIRMASI HAPUS RIWAYAT MEDIS] Anda yakin ingin menghapus Riwayat Medis ID: ${recordId}?\n\nAksi ini TIDAK dapat dibatalkan.`);
+
+    if (confirmation) {
+        store.deleteMedicalRecord(recordId, patientId);
     }
 };
 </script>

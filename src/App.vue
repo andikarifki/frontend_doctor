@@ -4,7 +4,7 @@
 
       <header class="flex justify-between items-center mb-6 border-b-4 border-blue-200 pb-3">
         <h1 class="text-4xl font-extrabold text-blue-700 text-center flex-grow">
-          Klien API Pasien & Riwayat Medis (Vue 3 + Tailwind)
+          Klien API Pasien & Riwayat Medis
         </h1>
       </header>
 

@@ -85,6 +85,52 @@ export const usePasienStore = defineStore("pasien", {
       await this.fetchPatients();
     },
 
+    async updateMedicalRecord(recordId, formData) {
+      const payload = {
+        diagnosis: formData.diagnosis,
+        tanggal_periksa: formData.tanggal_periksa,
+        obat: formData.obat,
+        lokasi_berobat: formData.lokasi_berobat,
+      };
+
+      // Asumsi menggunakan PUT ke endpoint medical-records/{id}
+      await this.executeApiCall("put", `medical-records/${recordId}`, payload);
+
+      alert(`Riwayat Medis ID ${recordId} berhasil diperbarui.`);
+
+      // Refresh data untuk memastikan perubahan terlihat di UI
+      await this.fetchPatients();
+    },
+
+    async deleteMedicalRecord(recordId, patientId) {
+      // 🟢 PERHATIKAN: Hapus baris 'this.loading = true'
+
+      try {
+        // 🟢 UBAH: Panggil executeApiCall untuk konsistensi.
+        // Endpoint-nya adalah 'medical-records/{id}' dan method-nya 'delete'.
+        await this.executeApiCall("delete", `medical-records/${recordId}`);
+
+        // 1. Beri notifikasi sukses
+        alert(`Riwayat Medis ID ${recordId} berhasil dihapus.`);
+
+        // 2. Perbarui data pasien secara reaktif (logika ini sudah bagus)
+        const patient = this.patients.find((p) => p.id === patientId);
+        if (patient) {
+          patient.medical_records = patient.medical_records.filter(
+            (record) => record.id !== recordId
+          );
+        }
+      } catch (error) {
+        // error handling kini ditangani oleh executeApiCall,
+        // kita tinggal menangkap error-nya di sini jika perlu aksi spesifik.
+        console.error(`Gagal menghapus riwayat medis ID ${recordId}:`, error);
+        // Peringatan otomatis dari executeApiCall atau gunakan this.apiError.
+        // alert(`Gagal menghapus riwayat medis. Error: ${this.apiError}`);
+      }
+      // 🟢 PERHATIKAN: Hapus blok 'finally' yang menyetel loading = false
+      // karena executeApiCall sudah menanganinya.
+    },
+
     // 🆕 CRUD: UPDATE PASIEN (PUT/PATCH)
     async updatePatient(id, formData) {
       // Pilihan 1: PUT Native (Paling Bersih, Umumnya Berhasil)
