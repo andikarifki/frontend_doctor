@@ -46,11 +46,12 @@
                                         class="block w-full border-gray-300 rounded-md shadow-sm p-2 text-sm">
                                     <select v-model="editForm.status"
                                         class="block w-full border-gray-300 rounded-md shadow-sm p-2 text-sm">
-                                        <option value="Terdaftar">Terdaftar</option>
-                                        <option value="Selesai">Selesai</option>
+                                        <option value="Aktif">Aktif</option>
+                                        <option value="Tidak Aktif">Tidak Aktif</option>
+                                        <option value="Meninggal">Meninggal</option>
                                     </select>
                                     <div class="flex space-x-2">
-                                        <button type="submit" :disabled="store.loading"
+                                        <button type="submit" :disabled="loading"
                                             class="bg-green-600 hover:bg-green-700 text-white font-bold py-1.5 px-3 rounded transition disabled:bg-gray-400 text-sm">
                                             Simpan
                                         </button>
@@ -73,7 +74,11 @@
                         </td>
                         <td class="px-4 py-3 whitespace-nowrap">
                             <span
-                                :class="{ 'bg-green-100 text-green-800': pasien.status === 'Selesai', 'bg-yellow-100 text-yellow-800': pasien.status === 'Terdaftar' }"
+                                :class="{
+                                    'bg-green-100 text-green-800': pasien.status === 'Aktif',
+                                    'bg-yellow-100 text-yellow-800': pasien.status === 'Tidak Aktif',
+                                    'bg-red-100 text-red-800': pasien.status === 'Meninggal'
+                                }"
                                 class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full">
                                 {{ pasien.status }}
                             </span>
@@ -96,14 +101,6 @@
 
                     <tr v-if="expandedId === pasien.id" class="bg-gray-100 transition-all duration-300">
                         <td colspan="5" class="p-4 border-t-4 border-yellow-500">
-                            <h4 class="font-semibold mb-3 text-lg text-gray-700">Riwayat Medis Pasien ID {{ pasien.id }}
-                            </h4>
-
-                            <button @click="toggleAddRecordForm(pasien.id)"
-                                class="bg-orange-500 hover:bg-orange-600 text-white text-sm py-1.5 px-3 rounded transition mb-4">
-                                {{ formVisibleId === pasien.id ? 'Sembunyikan Form' : '➕ Tambah Riwayat Medis Baru' }}
-                            </button>
-
                             <form v-if="formVisibleId === pasien.id" @submit.prevent="submitMedis(pasien.id)"
                                 class="space-y-3 p-4 mb-6 border border-yellow-400 rounded-lg bg-yellow-50 shadow-inner">
                                 <h5 class="text-md font-bold text-orange-700">Input Riwayat Medis Baru</h5>
@@ -123,7 +120,7 @@
                                         placeholder="Lokasi Berobat (ex: Klinik Sehat Utama)"
                                         class="block w-full border-gray-300 rounded-md shadow-sm p-2 text-sm">
                                 </div>
-                                <button type="submit" :disabled="store.loading"
+                                <button type="submit" :disabled="loading"
                                     class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-1.5 px-3 rounded transition disabled:bg-gray-400 text-sm">
                                     Simpan Riwayat Medis
                                 </button>
@@ -135,13 +132,12 @@
                                     <li v-for="record in pasien.medical_records" :key="record.id"
                                         class="bg-white p-3 border-l-4 border-yellow-500 shadow-sm text-sm">
 
-                                        <div v-if="editingRecordId !== record.id"
-                                            class="flex justify-between items-start">
+                                        <div v-if="editingRecordId !== record.id" class="flex justify-between items-start">
                                             <div>
                                                 <strong class="text-gray-700">Diagnosis:</strong> {{ record.diagnosis }}
                                                 |
                                                 <strong class="text-gray-700">Tgl Periksa:</strong> {{
-                                                    record.tanggal_periksa }} |
+                                                    record.tanggal_periksa.substring(0, 10) }} |
                                                 <strong class="text-gray-700">Obat:</strong> {{ record.obat }} |
                                                 <strong class="text-gray-700">Lokasi:</strong> {{ record.lokasi_berobat
                                                 }}
@@ -176,7 +172,7 @@
                                                 class="block w-full border-gray-300 rounded-md shadow-sm p-1.5 text-xs">
 
                                             <div class="flex space-x-2 pt-1">
-                                                <button type="submit" :disabled="store.loading"
+                                                <button type="submit" :disabled="loading"
                                                     class="bg-green-600 hover:bg-green-700 text-white font-bold py-1 px-2 rounded transition disabled:bg-gray-400 text-xs">
                                                     Simpan Perubahan
                                                 </button>
@@ -199,7 +195,7 @@
 </template>
 
 <script setup>
-import { ref } from 'vue';
+import { ref, onMounted } from 'vue'; // Tambahkan onMounted untuk memuat data
 import { usePasienStore } from '@/stores/pasienStore';
 import { useRouter } from 'vue-router';
 import { storeToRefs } from 'pinia';
@@ -209,11 +205,21 @@ const store = usePasienStore();
 const router = useRouter();
 const authStore = useAuthStore();
 
+// DESTRUCTURING PINIA: Ambil state dan action dari store
+const { patients, loading } = storeToRefs(store);
+const { updatePatient, addMedicalRecord, updateMedicalRecord, deletePatient, deleteMedicalRecord, fetchPatients } = store;
+
+
+// --- FUNGSI UTAMA ---
+onMounted(() => {
+    fetchPatients(); // Memuat data saat komponen dimuat
+});
+
 const handleLogout = () => {
     authStore.logout();
+    // Tambahkan navigasi ke halaman login setelah logout jika perlu
+    // router.push({ name: 'Login' }); 
 };
-
-const { patients, loading } = storeToRefs(store);
 
 // State lokal komponen
 const expandedId = ref(null);
@@ -239,12 +245,19 @@ const goToCreatePage = () => {
 // FUNGSI EDIT PASIEN (UPDATE)
 // ----------------------------------------------------
 const handleEditPasien = (pasien) => {
+    // Tutup jika sudah terbuka
     if (editingId.value === pasien.id) {
         editingId.value = null;
         return;
     }
+    
+    // Pastikan form lain tertutup
+    expandedId.value = null;
+    formVisibleId.value = null;
+    
     editingId.value = pasien.id;
-    // Memformat tanggal dari YYYY-MM-DDTHH:MM:SS menjadi YYYY-MM-DD
+    
+    // Memformat tanggal dari YYYY-MM-DDTHH:MM:SS.xxxZ menjadi YYYY-MM-DD
     const formattedDate = pasien.tanggal ? pasien.tanggal.substring(0, 10) : '';
 
     editForm.value = {
@@ -252,13 +265,12 @@ const handleEditPasien = (pasien) => {
         tanggal: formattedDate,
         status: pasien.status
     };
-    expandedId.value = null;
-    formVisibleId.value = null;
 };
 
 const submitEdit = async (patientId) => {
     try {
-        await store.updatePatient(patientId, editForm.value);
+        // Menggunakan action Pinia yang sudah di-destructuring
+        await updatePatient(patientId, editForm.value); 
         editingId.value = null;
     } catch (error) {
         console.error("Gagal update pasien:", error);
@@ -276,7 +288,8 @@ const toggleRiwayat = (id) => {
     editingId.value = null;
     resetMedisForm();
     formVisibleId.value = null;
-    expandedId.value = expandedId.value === id ? null : id;
+    // Toggle (buka/tutup) riwayat
+    expandedId.value = expandedId.value === id ? null : id; 
 };
 
 const toggleAddRecordForm = (id) => {
@@ -296,11 +309,12 @@ const submitMedis = async (patientId) => {
     };
 
     try {
-        await store.addMedicalRecord(dataToSend);
+        // Menggunakan action Pinia yang sudah di-destructuring
+        await addMedicalRecord(dataToSend);
         formVisibleId.value = null;
         resetMedisForm();
     } catch (error) {
-        // Error handling dari store Pinia akan muncul di console/notifikasi
+        console.error("Gagal tambah riwayat medis:", error);
     }
 };
 
@@ -308,11 +322,12 @@ const handleDeleteConfirmation = (id, nama) => {
     const confirmation = confirm(`[KONFIRMASI HAPUS] Anda yakin ingin menghapus Pasien: ${nama} (ID: ${id})?\n\nAksi ini akan menghapus SEMUA riwayat medis terkait dan TIDAK DAPAT DIBATALKAN.`);
 
     if (confirmation) {
-        store.deletePatient(id);
+        // Menggunakan action Pinia yang sudah di-destructuring
+        deletePatient(id);
     }
 };
 
-// 🟢 FUNGSI BARU: HANDLE EDIT RIWAYAT MEDIS (SUDAH DIPERBAIKI)
+// FUNGSI EDIT RIWAYAT MEDIS
 const handleEditRecord = (record) => {
     if (editingRecordId.value === record.id) {
         editingRecordId.value = null;
@@ -321,27 +336,26 @@ const handleEditRecord = (record) => {
 
     editingRecordId.value = record.id;
 
-    // --- 🟢 PERBAIKAN: Format tanggal hanya YYYY-MM-DD ---
+    // Memastikan format tanggal hanya YYYY-MM-DD
     const formattedDate = record.tanggal_periksa
         ? record.tanggal_periksa.substring(0, 10)
         : '';
-    // --------------------------------------------------------
 
     // Isi form edit dengan data record saat ini
     editRecordForm.value = {
-        tanggal_periksa: formattedDate, // Gunakan tanggal yang sudah diformat
+        tanggal_periksa: formattedDate,
         diagnosis: record.diagnosis,
         obat: record.obat,
         lokasi_berobat: record.lokasi_berobat,
     };
-    // Pastikan form tambah riwayat baru tertutup
-    formVisibleId.value = null;
+    formVisibleId.value = null; // Tutup form tambah
 };
 
-// 🟢 FUNGSI BARU: SUBMIT EDIT RIWAYAT MEDIS
+// FUNGSI SUBMIT EDIT RIWAYAT MEDIS
 const submitEditRecord = async (recordId) => {
     try {
-        await store.updateMedicalRecord(recordId, editRecordForm.value);
+        // Menggunakan action Pinia yang sudah di-destructuring
+        await updateMedicalRecord(recordId, editRecordForm.value);
         editingRecordId.value = null; // Tutup form setelah berhasil
     } catch (error) {
         console.error("Gagal update riwayat medis:", error);
@@ -349,12 +363,13 @@ const submitEditRecord = async (recordId) => {
 };
 
 
-// 🟢 FUNGSI BARU: HAPUS RIWAYAT MEDIS
+// FUNGSI HAPUS RIWAYAT MEDIS
 const handleDeleteRecord = (recordId, patientId) => {
     const confirmation = confirm(`[KONFIRMASI HAPUS RIWAYAT MEDIS] Anda yakin ingin menghapus Riwayat Medis ID: ${recordId}?\n\nAksi ini TIDAK dapat dibatalkan.`);
 
     if (confirmation) {
-        store.deleteMedicalRecord(recordId, patientId);
+        // Menggunakan action Pinia yang sudah di-destructuring
+        deleteMedicalRecord(recordId, patientId);
     }
 };
 </script>
