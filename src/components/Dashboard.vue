@@ -1,6 +1,5 @@
 <template>
   <div class="overflow-x-auto shadow-lg rounded-lg border border-gray-200">
-    <!-- Header atas -->
     <section
       class="p-4 border-b border-gray-200 bg-gray-50 flex justify-between items-center"
     >
@@ -18,37 +17,36 @@
       </button>
     </section>
 
-    <!-- Tabel pasien -->
-    <table class="min-w-full divide-y divide-gray-200">
+    <table class="min-w-full divide-y divide-gray-200 table-fixed">
       <thead class="bg-blue-800 text-white">
         <tr>
           <th
-            class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider"
+            class="w-[5%] px-4 py-3 text-left text-xs font-medium uppercase tracking-wider"
           >
             ID
           </th>
           <th
-            class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider"
+            class="w-[20%] px-4 py-3 text-left text-xs font-medium uppercase tracking-wider"
           >
             Nama
           </th>
           <th
-            class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider"
+            class="w-[15%] px-4 py-3 text-left text-xs font-medium uppercase tracking-wider"
           >
             Praktik
           </th>
           <th
-            class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider"
+            class="w-[15%] px-4 py-3 text-left text-xs font-medium uppercase tracking-wider"
           >
             Tanggal Lahir
           </th>
           <th
-            class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider"
+            class="w-[15%] px-4 py-3 text-left text-xs font-medium uppercase tracking-wider"
           >
             Status
           </th>
           <th
-            class="px-4 py-3 text-center text-xs font-medium uppercase tracking-wider w-1/4"
+            class="w-[30%] px-4 py-3 text-center text-xs font-medium uppercase tracking-wider"
           >
             Riwayat & Aksi
           </th>
@@ -56,7 +54,6 @@
       </thead>
 
       <tbody class="bg-white divide-y divide-gray-200">
-        <!-- Loading / kosong -->
         <tr v-if="loading && !patients.length">
           <td colspan="6" class="px-4 py-4 text-center text-gray-500 italic">
             Memuat data...
@@ -68,9 +65,7 @@
           </td>
         </tr>
 
-        <!-- Loop pasien -->
         <template v-for="pasien in patients" :key="pasien.id">
-          <!-- FORM EDIT PASIEN -->
           <tr
             v-if="editingId === pasien.id"
             class="bg-yellow-100 transition duration-100"
@@ -107,7 +102,6 @@
                     <option value="Meninggal">Meninggal</option>
                   </select>
 
-                  <!-- Dropdown Praktik -->
                   <select
                     v-model="editForm.praktik_id"
                     class="block w-full border-gray-300 rounded-md shadow-sm p-2 text-sm"
@@ -147,27 +141,38 @@
             </td>
           </tr>
 
-          <!-- DATA PASIEN -->
           <tr
             v-if="editingId !== pasien.id"
             :class="{ 'bg-blue-50': expandedId === pasien.id }"
             class="hover:bg-indigo-50 transition duration-100"
           >
-            <td class="px-4 py-3 text-sm font-medium text-gray-900">
+            <td
+              class="px-4 py-3 text-sm font-medium text-gray-900 overflow-hidden text-ellipsis whitespace-nowrap"
+            >
               {{ pasien.id }}
             </td>
-            <td class="px-4 py-3 text-sm text-gray-600">{{ pasien.nama }}</td>
-            <td class="px-4 py-3 text-sm text-gray-600">
+            <td
+              class="px-4 py-3 text-sm text-gray-600 overflow-hidden text-ellipsis"
+            >
+              {{ pasien.nama }}
+            </td>
+            <td
+              class="px-4 py-3 text-sm text-gray-600 overflow-hidden text-ellipsis"
+            >
               {{
                 pasien.praktik?.lokasi_praktik ||
                 pasien.praktik?.nama_praktik ||
                 "-"
               }}
             </td>
-            <td class="px-4 py-3 text-sm text-gray-600">
+            <td
+              class="px-4 py-3 text-sm text-gray-600 whitespace-nowrap overflow-hidden text-ellipsis"
+            >
               {{ pasien.tanggal ? pasien.tanggal.substring(0, 10) : "-" }}
             </td>
-            <td class="px-4 py-3 whitespace-nowrap">
+            <td
+              class="px-4 py-3 whitespace-nowrap overflow-hidden text-ellipsis"
+            >
               <span
                 :class="{
                   'bg-green-100 text-green-800': pasien.status === 'Aktif',
@@ -181,42 +186,46 @@
               </span>
             </td>
             <td
-              class="px-4 py-3 text-sm flex justify-center items-center space-x-2"
+              class="px-4 py-3 text-sm flex justify-center items-center space-x-2 flex-nowrap"
             >
               <button
                 @click="toggleRiwayat(pasien.id)"
-                class="text-indigo-600 hover:text-indigo-900 text-xs py-1 px-2 border border-indigo-600 rounded transition"
+                class="text-indigo-600 hover:text-indigo-900 text-xs py-1 px-2 border border-indigo-600 rounded transition whitespace-nowrap"
               >
                 Riwayat ({{ pasien.medical_records.length }})
               </button>
               <button
-                @click="toggleAddRecordForm(pasien.id)"
-                class="bg-blue-600 hover:bg-blue-700 text-white text-xs py-1 px-2 rounded transition"
-              >
-                ➕ Tambah Riwayat
-              </button>
-              <button
                 @click="handleEditPasien(pasien)"
-                class="bg-yellow-500 hover:bg-yellow-600 text-gray-800 text-xs py-1 px-2 rounded transition"
+                class="bg-yellow-500 hover:bg-yellow-600 text-gray-800 text-xs py-1 px-2 rounded transition whitespace-nowrap"
               >
                 Edit
               </button>
               <button
                 @click="handleDeleteConfirmation(pasien.id, pasien.nama)"
-                class="bg-red-600 hover:bg-red-700 text-white text-xs py-1 px-2 rounded transition"
+                class="bg-red-600 hover:bg-red-700 text-white text-xs py-1 px-2 rounded transition whitespace-nowrap"
               >
                 Hapus
               </button>
             </td>
           </tr>
 
-          <!-- DETAIL RIWAYAT -->
           <tr
             v-if="expandedId === pasien.id"
             class="bg-gray-100 transition-all duration-300"
           >
             <td colspan="6" class="p-4 border-t-4 border-yellow-500">
-              <!-- FORM TAMBAH RIWAYAT (visible ketika formVisibleId === pasien.id) -->
+              <div class="mb-4 flex justify-between items-center">
+                <h4 class="text-lg font-semibold text-gray-700">
+                  Daftar Riwayat Medis
+                </h4>
+                <button
+                  @click="toggleAddRecordForm(pasien.id)"
+                  class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded transition text-sm"
+                >
+                  ➕ Input Riwayat Baru
+                </button>
+              </div>
+
               <form
                 v-if="formVisibleId === pasien.id"
                 @submit.prevent="submitMedis(pasien.id)"
@@ -274,7 +283,6 @@
                 </div>
               </form>
 
-              <!-- DAFTAR RIWAYAT -->
               <div class="mt-4">
                 <ul v-if="pasien.medical_records.length" class="space-y-2">
                   <li
@@ -296,7 +304,7 @@
                         <strong class="text-gray-700">Lokasi:</strong>
                         {{ record.lokasi_berobat }}
                       </div>
-                      <div class="flex space-x-2 ml-4">
+                      <div class="flex space-x-2 ml-4 flex-shrink-0">
                         <button
                           @click="handleEditRecord(record)"
                           class="bg-yellow-500 hover:bg-yellow-600 text-gray-800 text-xs py-1 px-2 rounded transition"
@@ -312,7 +320,6 @@
                       </div>
                     </div>
 
-                    <!-- FORM EDIT RIWAYAT -->
                     <form
                       v-else
                       @submit.prevent="submitEditRecord(record.id)"
@@ -368,7 +375,8 @@
                   </li>
                 </ul>
                 <p v-else class="text-gray-500 italic">
-                  Belum ada riwayat medis.
+                  Belum ada riwayat medis. Klik "Input Riwayat Baru" untuk
+                  menambahkan.
                 </p>
               </div>
             </td>
