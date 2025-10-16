@@ -1,7 +1,5 @@
-// src/stores/pasienStore.js
 import { defineStore } from "pinia";
 import api from "@/api/axios";
-// Pastikan file axios.js Anda mendukung PATCH/PUT
 
 export const usePasienStore = defineStore("pasien", {
   state: () => ({
@@ -10,22 +8,21 @@ export const usePasienStore = defineStore("pasien", {
     apiResponse: null,
     apiError: null,
   }),
+
   actions: {
+    // 🧠 Fungsi umum untuk semua request API
     async executeApiCall(method, endpoint, data = null) {
-      // ... (Fungsi ini tetap sama)
       this.loading = true;
       this.apiError = null;
       this.apiResponse = null;
 
       try {
-        // Karena Laravel sering menggunakan POST dengan _method:PUT/PATCH
-        // untuk form HTML, kita gunakan PUT/PATCH native di Axios.
         const response = await api({ method, url: endpoint, data });
 
         const responseData =
           response.status === 204 || !response.data
             ? {
-                message: `Operasi ${method} pada ${endpoint} berhasil. (Status ${response.status})`,
+                message: `Operasi ${method.toUpperCase()} ${endpoint} berhasil (Status ${response.status})`,
               }
             : response.data;
 
@@ -34,12 +31,14 @@ export const usePasienStore = defineStore("pasien", {
           statusText: response.statusText,
           data: responseData,
         };
+
         return response;
       } catch (error) {
         this.apiError =
           error.response?.data?.message ||
           error.message ||
-          `Gagal melakukan aksi ${method} pada ${endpoint}.`;
+          `Gagal melakukan aksi ${method.toUpperCase()} ke ${endpoint}`;
+
         this.apiResponse = error.response
           ? {
               status: error.response.status,
@@ -48,32 +47,47 @@ export const usePasienStore = defineStore("pasien", {
             }
           : null;
 
+        console.error("API Error:", this.apiError);
         throw error;
       } finally {
         this.loading = false;
       }
     },
 
-    // CRUD: READ (Tetap Sama)
+    // 🟢 GET semua pasien
     async fetchPatients() {
-      // ...
+      this.loading = true;
       try {
         const response = await this.executeApiCall("get", "pasien");
-        this.patients = response.data;
+        // Laravel return array langsung, pastikan assign benar
+        this.patients = response.data.data || response.data || [];
       } catch (error) {
         this.patients = [];
+      } finally {
+        this.loading = false;
       }
     },
 
-    // CRUD: CREATE Pasien (Tetap Sama)
+    // 🟢 CREATE pasien baru
     async addPatient(formData) {
       await this.executeApiCall("post", "pasien", formData);
       await this.fetchPatients();
     },
 
-    // CRUD: CREATE Riwayat Medis (Pastikan field sesuai error validasi Anda)
+    // 🟢 UPDATE pasien
+    async updatePatient(id, formData) {
+      await this.executeApiCall("put", `pasien/${id}`, formData);
+      await this.fetchPatients();
+    },
+
+    // 🟢 DELETE pasien
+    async deletePatient(id) {
+      await this.executeApiCall("delete", `pasien/${id}`);
+      await this.fetchPatients();
+    },
+
+    // 🟢 CREATE medical record
     async addMedicalRecord(formData) {
-      // Mengirim payload dengan nama field persis seperti yang diminta oleh error validasi Anda.
       const payload = {
         pasien_id: formData.pasien_id,
         diagnosis: formData.diagnosis,
@@ -85,6 +99,7 @@ export const usePasienStore = defineStore("pasien", {
       await this.fetchPatients();
     },
 
+    // 🟢 UPDATE medical record
     async updateMedicalRecord(recordId, formData) {
       const payload = {
         diagnosis: formData.diagnosis,
@@ -93,27 +108,18 @@ export const usePasienStore = defineStore("pasien", {
         lokasi_berobat: formData.lokasi_berobat,
       };
 
-      // Asumsi menggunakan PUT ke endpoint medical-records/{id}
       await this.executeApiCall("put", `medical-records/${recordId}`, payload);
-
-      alert(`Riwayat Medis ID ${recordId} berhasil diperbarui.`);
-
-      // Refresh data untuk memastikan perubahan terlihat di UI
+      alert(`Riwayat medis ID ${recordId} berhasil diperbarui.`);
       await this.fetchPatients();
     },
 
+    // 🟢 DELETE medical record
     async deleteMedicalRecord(recordId, patientId) {
-      // 🟢 PERHATIKAN: Hapus baris 'this.loading = true'
-
       try {
-        // 🟢 UBAH: Panggil executeApiCall untuk konsistensi.
-        // Endpoint-nya adalah 'medical-records/{id}' dan method-nya 'delete'.
         await this.executeApiCall("delete", `medical-records/${recordId}`);
+        alert(`Riwayat medis ID ${recordId} berhasil dihapus.`);
 
-        // 1. Beri notifikasi sukses
-        alert(`Riwayat Medis ID ${recordId} berhasil dihapus.`);
-
-        // 2. Perbarui data pasien secara reaktif (logika ini sudah bagus)
+        // Hapus langsung dari state supaya UI langsung update
         const patient = this.patients.find((p) => p.id === patientId);
         if (patient) {
           patient.medical_records = patient.medical_records.filter(
@@ -121,34 +127,8 @@ export const usePasienStore = defineStore("pasien", {
           );
         }
       } catch (error) {
-        // error handling kini ditangani oleh executeApiCall,
-        // kita tinggal menangkap error-nya di sini jika perlu aksi spesifik.
-        console.error(`Gagal menghapus riwayat medis ID ${recordId}:`, error);
-        // Peringatan otomatis dari executeApiCall atau gunakan this.apiError.
-        // alert(`Gagal menghapus riwayat medis. Error: ${this.apiError}`);
+        console.error("Gagal menghapus riwayat medis:", error);
       }
-      // 🟢 PERHATIKAN: Hapus blok 'finally' yang menyetel loading = false
-      // karena executeApiCall sudah menanganinya.
-    },
-
-    // 🆕 CRUD: UPDATE PASIEN (PUT/PATCH)
-    async updatePatient(id, formData) {
-      // Pilihan 1: PUT Native (Paling Bersih, Umumnya Berhasil)
-      await this.executeApiCall("put", `pasien/${id}`, formData);
-
-      // Pilihan 2: POST dengan Method Spoofing (Jika PUT/PATCH gagal)
-      /*
-    const dataToSend = { ...formData, _method: 'PUT' };
-    await this.executeApiCall('post', `pasien/${id}`, dataToSend);
-    */
-
-      await this.fetchPatients(); // Refresh data pasien setelah update
-    },
-
-    // CRUD: DELETE (Tetap Sama)
-    async deletePatient(id) {
-      await this.executeApiCall("delete", `pasien/${id}`);
-      await this.fetchPatients();
     },
   },
 });
