@@ -2,48 +2,61 @@ import { createRouter, createWebHistory } from "vue-router";
 import Login from "../components/Login.vue";
 import Dashboard from "../components/Dashboard.vue";
 import PasienCreatePage from "../views/PasienCreatePage.vue";
+import DaftarPraktik from "../views/DaftarPraktik.vue";
 
-// Fungsi pengecekan otentikasi dummy
-// NANTINYA: Ganti ini dengan pengecekan Token di Local Storage!
-const isAuthenticated = () => {
-  return localStorage.getItem("authToken") !== null;
-};
+const isAuthenticated = () => localStorage.getItem("authToken") !== null;
 
 const routes = [
   {
     path: "/",
     name: "Login",
     component: Login,
+    meta: { requiresAuth: false, fullLayout: true },
   },
   {
     path: "/dashboard",
     name: "Dashboard",
     component: Dashboard,
-    // Middleware untuk melindungi route
-    meta: { requiresAuth: true },
+    meta: { requiresAuth: true, title: "Dashboard", fullLayout: false },
   },
   {
-    // 🟢 Rute Halaman Tambah Pasien
     path: "/pasien/create",
-    name: "PasienCreate", // Digunakan oleh goToCreatePage di Dashboard.vue
+    name: "PasienCreate",
     component: PasienCreatePage,
+    meta: { requiresAuth: true, title: "Daftar Pasien", fullLayout: false },
+  },
+  {
+    path: "/daftar",
+    name: "DaftarPraktik",
+    component: DaftarPraktik,
+    meta: { requiresAuth: true, title: "Daftar Praktik", fullLayout: false },
   },
 ];
 
 const router = createRouter({
-  // Gunakan history mode untuk URL yang bersih (tanpa '#')
   history: createWebHistory(),
   routes,
 });
 
-// Navigation Guard (Global Middleware)
 router.beforeEach((to, from, next) => {
-  if (to.meta.requiresAuth && !isAuthenticated()) {
-    // Jika route memerlukan otentikasi DAN pengguna belum login
-    next({ name: "Login" }); // Arahkan ke halaman Login
-  } else {
-    next(); // Lanjutkan ke route tujuan
+  const loggedIn = isAuthenticated();
+
+  if (to.name === "Login" && loggedIn) {
+    return next({ name: "Dashboard" });
   }
+
+  if (to.meta.requiresAuth && !loggedIn) {
+    return next({ name: "Login" });
+  }
+
+  next();
+});
+
+router.afterEach((to) => {
+  const baseTitle = "Manajemen Praktik dr. Johan";
+  document.title = to.meta.title
+    ? `${to.meta.title} | ${baseTitle}`
+    : baseTitle;
 });
 
 export default router;
