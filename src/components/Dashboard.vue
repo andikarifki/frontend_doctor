@@ -3,12 +3,33 @@
     <section
       class="p-4 border-b border-gray-200 bg-gray-50 flex justify-between items-center"
     >
-      <button
-        @click="goToCreatePage"
-        class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded transition text-sm"
-      >
-        ➕ Tambah Pasien Baru
-      </button>
+      <div class="flex space-x-3 items-center">
+        <select
+          v-model="selectedPraktikId"
+          @change="filterPatientsByPraktik"
+          class="block border-gray-300 rounded-md shadow-sm p-2 text-sm border"
+        >
+          <option value="">-- Tampilkan Semua Praktik --</option>
+          <option
+            v-for="praktik in praktikList"
+            :key="praktik.id"
+            :value="praktik.id"
+          >
+            {{
+              praktik.lokasi_praktik ||
+              praktik.nama_praktik ||
+              "Praktik #" + praktik.id
+            }}
+          </option>
+        </select>
+        <button
+          @click="goToCreatePage"
+          class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded transition text-sm"
+        >
+          ➕ Tambah Pasien Baru
+        </button>
+      </div>
+
       <button
         @click="handleLogout"
         class="bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-4 rounded transition text-sm"
@@ -23,7 +44,7 @@
           <th
             class="w-[5%] px-4 py-3 text-left text-xs font-medium uppercase tracking-wider"
           >
-            ID
+            Rekam Medis
           </th>
           <th
             class="w-[20%] px-4 py-3 text-left text-xs font-medium uppercase tracking-wider"
@@ -33,12 +54,12 @@
           <th
             class="w-[15%] px-4 py-3 text-left text-xs font-medium uppercase tracking-wider"
           >
-            Praktik
+            Tempat Periksa
           </th>
           <th
             class="w-[15%] px-4 py-3 text-left text-xs font-medium uppercase tracking-wider"
           >
-            Tanggal Lahir
+            Tanggal Daftar
           </th>
           <th
             class="w-[15%] px-4 py-3 text-left text-xs font-medium uppercase tracking-wider"
@@ -177,7 +198,8 @@
                 :class="{
                   'bg-green-100 text-green-800': pasien.status === 'Aktif',
                   'bg-yellow-100 text-yellow-800':
-                    pasien.status === 'Tidak Aktif',
+                    pasien.status === 'Tidak Aktif' ||
+                    pasien.status === 'Selesai', // Menambahkan 'Selesai'
                   'bg-red-100 text-red-800': pasien.status === 'Meninggal',
                 }"
                 class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full"
@@ -301,7 +323,7 @@
                         {{ record.tanggal_periksa.substring(0, 10) }} |
                         <strong class="text-gray-700">Obat:</strong>
                         {{ record.obat }} |
-                        <strong class="text-gray-700">Lokasi:</strong>
+                        <strong class="text-gray-700">Tindakan:</strong>
                         {{ record.lokasi_berobat }}
                       </div>
                       <div class="flex space-x-2 ml-4 flex-shrink-0">
@@ -414,6 +436,9 @@ const formVisibleId = ref(null);
 const editingId = ref(null);
 const praktikList = ref([]);
 
+// STATE BARU UNTUK FILTER
+const selectedPraktikId = ref("");
+
 const editForm = ref({ nama: "", tanggal: "", status: "", praktik_id: "" });
 const medisForm = ref({
   tanggal_periksa: "",
@@ -437,12 +462,13 @@ const handleLogout = () => {
   router.push({ name: "Login" });
 };
 
-// load patients + praktik list
+// load praktik list
 const fetchPraktikList = async () => {
   try {
     const res = await axios.get(
       "http://localhost:8000/api/pendaftaran-praktik"
     );
+    // Asumsi API pendaftaran-praktik mengembalikan data di res.data.data
     praktikList.value = res.data.data || res.data;
   } catch (err) {
     console.error("Gagal load daftar praktik:", err);
@@ -450,7 +476,38 @@ const fetchPraktikList = async () => {
   }
 };
 
+// FUNGSI UNTUK MEMFILTER PASIEN BERDASARKAN PRAKTIK ID
+const filterPatientsByPraktik = async () => {
+  const praktikId = selectedPraktikId.value;
+
+  if (!praktikId) {
+    // Jika filter direset (Tampilkan Semua), panggil fungsi default
+    await fetchPatients();
+    return;
+  }
+
+  // Panggil endpoint filter di Laravel Controller
+  try {
+    store.loading = true;
+    const url = `http://localhost:8000/api/pasien/praktik/${praktikId}`;
+    const res = await axios.get(url);
+
+    // Langsung ganti state patients di Pinia Store
+    store.patients = res.data.data;
+
+    store.loading = false;
+  } catch (err) {
+    console.error("Gagal filter pasien berdasarkan praktik:", err);
+    store.loading = false;
+    alert(
+      "❌ Gagal memuat data filter: " + (err.response?.data?.message || err)
+    );
+    store.patients = []; // Clear list on error
+  }
+};
+
 onMounted(async () => {
+  // Muat semua pasien (default) dan daftar praktik saat pertama kali dimuat
   await fetchPatients();
   await fetchPraktikList();
 });
@@ -460,6 +517,7 @@ const handleEditPasien = (pasien) => {
   editingId.value = pasien.id;
   editForm.value = {
     nama: pasien.nama,
+    // Pastikan tanggal diformat ke YYYY-MM-DD
     tanggal: pasien.tanggal?.substring(0, 10) || "",
     status: pasien.status,
     praktik_id: pasien.praktik_id || "",
@@ -524,6 +582,7 @@ const submitMedis = async (patientId) => {
     // After success, close form and refresh patients (store already refreshes in action)
     formVisibleId.value = null;
     resetMedisForm();
+    // Memuat ulang data pasien setelah menambahkan riwayat, untuk melihat update
     await fetchPatients();
     alert("✅ Riwayat medis ditambahkan!");
   } catch (err) {
@@ -575,7 +634,6 @@ const handleDeleteRecord = async (recordId, patientId) => {
 
   try {
     await deleteMedicalRecord(recordId, patientId);
-    // store.deleteMedicalRecord already updates state locally; ensure latest
     await fetchPatients();
   } catch (err) {
     console.error("Gagal hapus riwayat:", err);
