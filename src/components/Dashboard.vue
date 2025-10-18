@@ -416,9 +416,13 @@ import axios from "axios";
 import { usePasienStore } from "@/stores/pasienStore";
 import { useRouter } from "vue-router";
 import { storeToRefs } from "pinia";
+import { usePraktikStore } from "@/stores/praktikStore"; // 👈 IMPORT BARU
 
 const store = usePasienStore();
 const router = useRouter();
+const praktikStore = usePraktikStore(); // 👈 INISIALISASI BARU
+const { praktikList } = storeToRefs(praktikStore); // 👈 AKSES praktikList BARU
+const { fetchPraktikList } = praktikStore;
 
 const { patients, loading } = storeToRefs(store);
 const {
@@ -433,7 +437,6 @@ const {
 const expandedId = ref(null);
 const formVisibleId = ref(null);
 const editingId = ref(null);
-const praktikList = ref([]);
 
 // STATE BARU UNTUK PENCARIAN
 const searchQuery = ref("");
@@ -459,20 +462,6 @@ const editRecordForm = ref({
 });
 
 const goToCreatePage = () => router.push({ name: "PasienCreate" });
-
-// load praktik list
-const fetchPraktikList = async () => {
-  try {
-    const res = await axios.get(
-      "http://localhost:8000/api/pendaftaran-praktik"
-    );
-    // Asumsi API pendaftaran-praktik mengembalikan data di res.data.data
-    praktikList.value = res.data.data || res.data;
-  } catch (err) {
-    console.error("Gagal load daftar praktik:", err);
-    praktikList.value = [];
-  }
-};
 
 // FUNGSI PENCARIAN PASIEN BERDASARKAN NAMA
 const searchPatients = async () => {
