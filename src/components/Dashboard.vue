@@ -432,6 +432,8 @@ const {
   deleteMedicalRecord,
   deletePatient,
   fetchPatients,
+  // 👈 Asumsi action filterPatientsByPraktik telah ditambahkan di store
+  filterPatientsByPraktik: storeFilterPatientsByPraktik,
 } = store;
 
 const expandedId = ref(null);
@@ -465,36 +467,30 @@ const goToCreatePage = () => router.push({ name: "PasienCreate" });
 
 // FUNGSI PENCARIAN PASIEN BERDASARKAN NAMA
 const searchPatients = async () => {
-  const query = searchQuery.value.trim();
+  const query = searchQuery.value.trim(); // Reset filter praktik jika pencarian nama aktif
 
-  // Reset filter praktik jika pencarian nama aktif
   if (query) {
     selectedPraktikId.value = "";
-  }
+  } // Jika query kosong, kembalikan ke daftar pasien lengkap (fetchPatients)
 
-  // Jika query kosong, kembalikan ke daftar pasien lengkap (fetchPatients)
   if (!query) {
     await fetchPatients();
     return;
-  }
+  } // Panggil API search (menggunakan implementasi lokal Anda)
 
-  // Panggil API search
   try {
-    store.loading = true;
-    // Gunakan encodeURIComponent untuk menangani nama yang memiliki spasi/karakter khusus
+    store.loading = true; // Gunakan encodeURIComponent untuk menangani nama yang memiliki spasi/karakter khusus
     const url = `http://localhost:8000/api/pasien/search/${encodeURIComponent(
       query
     )}`;
-    const res = await axios.get(url);
+    const res = await axios.get(url); // Langsung ganti state patients di Pinia Store
 
-    // Langsung ganti state patients di Pinia Store
     store.patients = res.data.data || res.data;
 
     store.loading = false;
   } catch (err) {
     console.error("Gagal mencari pasien berdasarkan nama:", err);
-    store.loading = false;
-    // Tampilkan pesan error hanya jika ada masalah koneksi/server (bukan 404 dari data kosong)
+    store.loading = false; // Tampilkan pesan error hanya jika ada masalah koneksi/server (bukan 404 dari data kosong)
     if (err.response?.status !== 404) {
       alert(
         "❌ Gagal memuat hasil pencarian: " +
@@ -509,47 +505,25 @@ const searchPatients = async () => {
 const searchPatientsDebounced = () => {
   if (searchTimeout) {
     clearTimeout(searchTimeout);
-  }
-  // Menunggu 300ms setelah user berhenti mengetik
+  } // Menunggu 300ms setelah user berhenti mengetik
   searchTimeout = setTimeout(() => {
     searchPatients();
   }, 300);
 };
 
-// FUNGSI UNTUK MEMFILTER PASIEN BERDASARKAN PRAKTIK ID
+// FUNGSI UNTUK MEMFILTER PASIEN BERDASARKAN PRAKTIK ID (MEMANGGIL DARI STORE)
 const filterPatientsByPraktik = async () => {
   const praktikId = selectedPraktikId.value;
 
-  // Reset search query jika filter praktik aktif
+  // 🚨 LOGIKA PENTING: Reset search query jika filter praktik diaktifkan
   searchQuery.value = "";
   if (searchTimeout) {
     clearTimeout(searchTimeout);
   }
 
-  if (!praktikId) {
-    // Jika filter direset (Tampilkan Semua), panggil fungsi default
-    await fetchPatients();
-    return;
-  }
-
-  // Panggil endpoint filter di Laravel Controller
-  try {
-    store.loading = true;
-    const url = `http://localhost:8000/api/pasien/praktik/${praktikId}`;
-    const res = await axios.get(url);
-
-    // Langsung ganti state patients di Pinia Store
-    store.patients = res.data.data;
-
-    store.loading = false;
-  } catch (err) {
-    console.error("Gagal filter pasien berdasarkan praktik:", err);
-    store.loading = false;
-    alert(
-      "❌ Gagal memuat data filter: " + (err.response?.data?.message || err)
-    );
-    store.patients = []; // Clear list on error
-  }
+  // Panggil action dari Pinia Store
+  // Store akan menangani fetchPatients jika praktikId kosong
+  await storeFilterPatientsByPraktik(praktikId);
 };
 
 onMounted(async () => {
@@ -558,12 +532,12 @@ onMounted(async () => {
   await fetchPraktikList();
 });
 
+// ... (sisa kode fungsi lainnya tetap sama) ...
 // EDIT PASIEN
 const handleEditPasien = (pasien) => {
   editingId.value = pasien.id;
   editForm.value = {
-    nama: pasien.nama,
-    // Pastikan tanggal diformat ke YYYY-MM-DD
+    nama: pasien.nama, // Pastikan tanggal diformat ke YYYY-MM-DD
     tanggal: pasien.tanggal?.substring(0, 10) || "",
     status: pasien.status,
     praktik_id: pasien.praktik_id || "",
@@ -624,11 +598,9 @@ const submitMedis = async (patientId) => {
   }
 
   try {
-    await addMedicalRecord({ pasien_id: patientId, ...medisForm.value });
-    // After success, close form and refresh patients (store already refreshes in action)
+    await addMedicalRecord({ pasien_id: patientId, ...medisForm.value }); // After success, close form and refresh patients (store already refreshes in action)
     formVisibleId.value = null;
-    resetMedisForm();
-    // Memuat ulang data pasien setelah menambahkan riwayat, untuk melihat update
+    resetMedisForm(); // Memuat ulang data pasien setelah menambahkan riwayat, untuk melihat update
     await fetchPatients();
     alert("✅ Riwayat medis ditambahkan!");
   } catch (err) {
@@ -648,8 +620,7 @@ const handleEditRecord = (record) => {
     diagnosis: record.diagnosis || "",
     obat: record.obat || "",
     lokasi_berobat: record.lokasi_berobat || "",
-  };
-  // hide add form
+  }; // hide add form
   formVisibleId.value = null;
 };
 
