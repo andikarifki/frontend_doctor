@@ -1,66 +1,75 @@
 <template>
   <div class="overflow-x-auto shadow-lg rounded-lg border border-gray-200">
     <section
-      class="p-4 border-b border-gray-200 bg-gray-50 flex justify-between items-center"
+      class="p-4 border-b border-gray-200 bg-gray-50 flex flex-col md:flex-row justify-between items-center space-y-3 md:space-y-0 md:space-x-4"
     >
-      <div class="flex space-x-3 items-center">
-        <select
-          v-model="selectedPraktikId"
-          @change="filterPatientsByPraktik"
-          class="block border-gray-300 rounded-md shadow-sm p-2 text-sm border"
+      <button
+        @click="goToCreatePage"
+        class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded transition text-sm w-full md:w-auto"
+      >
+        ➕ Tambah Pasien Baru
+      </button>
+
+      <!-- FIELD PENCARIAN BERDASARKAN NAMA -->
+      <input
+        type="text"
+        v-model="searchQuery"
+        @input="searchPatientsDebounced"
+        placeholder="🔍 Cari nama pasien..."
+        class="block border-gray-300 rounded-md shadow-sm p-2 text-sm border w-full md:w-1/3 max-w-md focus:ring-indigo-500 focus:border-indigo-500"
+      />
+      <!-- END FIELD PENCARIAN -->
+
+      <select
+        v-model="selectedPraktikId"
+        @change="filterPatientsByPraktik"
+        class="block border-gray-300 rounded-md shadow-sm p-2 text-sm border w-full md:w-auto"
+      >
+        <option value="">-- Tampilkan Semua Praktik --</option>
+        <option
+          v-for="praktik in praktikList"
+          :key="praktik.id"
+          :value="praktik.id"
         >
-          <option value="">-- Tampilkan Semua Praktik --</option>
-          <option
-            v-for="praktik in praktikList"
-            :key="praktik.id"
-            :value="praktik.id"
-          >
-            {{
-              praktik.lokasi_praktik ||
-              praktik.nama_praktik ||
-              "Praktik #" + praktik.id
-            }}
-          </option>
-        </select>
-        <button
-          @click="goToCreatePage"
-          class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded transition text-sm"
-        >
-          ➕ Tambah Pasien Baru
-        </button>
-      </div>
+          {{
+            praktik.lokasi_praktik ||
+            praktik.nama_praktik ||
+            "Praktik #" + praktik.id
+          }}
+        </option>
+      </select>
     </section>
 
     <table class="min-w-full divide-y divide-gray-200 table-fixed">
       <thead class="bg-blue-800 text-white">
         <tr>
           <th
-            class="w-[5%] px-4 py-3 text-left text-xs font-medium uppercase tracking-wider"
+            class="w-[5%] px-4 py-3 text-center text-xs font-medium uppercase tracking-wider"
           >
-            Rekam Medis
+            No
           </th>
           <th
-            class="w-[20%] px-4 py-3 text-left text-xs font-medium uppercase tracking-wider"
+            class="w-[15%] px-4 py-3 text-left text-xs font-medium uppercase tracking-wider"
           >
             Nama
           </th>
           <th
-            class="w-[15%] px-4 py-3 text-left text-xs font-medium uppercase tracking-wider"
+            class="w-[13%] px-4 py-3 text-left text-xs font-medium uppercase tracking-wider"
           >
             Tempat Periksa
           </th>
           <th
-            class="w-[15%] px-4 py-3 text-left text-xs font-medium uppercase tracking-wider"
+            class="w-[12%] px-4 py-3 text-left text-xs font-medium uppercase tracking-wider"
           >
             Tanggal Daftar
           </th>
           <th
-            class="w-[15%] px-4 py-3 text-left text-xs font-medium uppercase tracking-wider"
+            class="w-[12%] px-4 py-3 text-left text-xs font-medium uppercase tracking-wider"
           >
             Status
           </th>
           <th
-            class="w-[30%] px-4 py-3 text-center text-xs font-medium uppercase tracking-wider"
+            class="w-[43%] px-4 py-3 text-center text-xs font-medium uppercase tracking-wider"
           >
             Riwayat & Aksi
           </th>
@@ -69,22 +78,22 @@
 
       <tbody class="bg-white divide-y divide-gray-200">
         <tr v-if="loading && !patients.length">
-          <td colspan="6" class="px-4 py-4 text-center text-gray-500 italic">
+          <td colspan="7" class="px-4 py-4 text-center text-gray-500 italic">
             Memuat data...
           </td>
         </tr>
         <tr v-else-if="!patients.length && !loading">
-          <td colspan="6" class="px-4 py-4 text-center text-gray-500 italic">
+          <td colspan="7" class="px-4 py-4 text-center text-gray-500 italic">
             Belum ada data pasien.
           </td>
         </tr>
 
-        <template v-for="pasien in patients" :key="pasien.id">
+        <template v-for="(pasien, index) in patients" :key="pasien.id">
           <tr
             v-if="editingId === pasien.id"
             class="bg-yellow-100 transition duration-100"
           >
-            <td colspan="6" class="p-4 border-t-4 border-yellow-500">
+            <td colspan="7" class="p-4 border-t-4 border-yellow-500">
               <form
                 @submit.prevent="submitEdit(pasien.id)"
                 class="space-y-3 p-4 border border-orange-400 rounded-lg bg-orange-50 shadow-inner"
@@ -160,11 +169,10 @@
             :class="{ 'bg-blue-50': expandedId === pasien.id }"
             class="hover:bg-indigo-50 transition duration-100"
           >
-            <td
-              class="px-4 py-3 text-sm font-medium text-gray-900 overflow-hidden text-ellipsis whitespace-nowrap"
-            >
-              {{ pasien.id }}
+            <td class="px-4 py-3 text-sm text-gray-600 text-center font-medium">
+              {{ index + 1 }}
             </td>
+
             <td
               class="px-4 py-3 text-sm text-gray-600 overflow-hidden text-ellipsis"
             >
@@ -228,7 +236,7 @@
             v-if="expandedId === pasien.id"
             class="bg-gray-100 transition-all duration-300"
           >
-            <td colspan="6" class="p-4 border-t-4 border-yellow-500">
+            <td colspan="7" class="p-4 border-t-4 border-yellow-500">
               <div class="mb-4 flex justify-between items-center">
                 <h4 class="text-lg font-semibold text-gray-700">
                   Daftar Riwayat Medis
@@ -427,7 +435,11 @@ const formVisibleId = ref(null);
 const editingId = ref(null);
 const praktikList = ref([]);
 
-// STATE BARU UNTUK FILTER
+// STATE BARU UNTUK PENCARIAN
+const searchQuery = ref("");
+let searchTimeout = null;
+
+// STATE UNTUK FILTER
 const selectedPraktikId = ref("");
 
 const editForm = ref({ nama: "", tanggal: "", status: "", praktik_id: "" });
@@ -462,9 +474,68 @@ const fetchPraktikList = async () => {
   }
 };
 
+// FUNGSI PENCARIAN PASIEN BERDASARKAN NAMA
+const searchPatients = async () => {
+  const query = searchQuery.value.trim();
+
+  // Reset filter praktik jika pencarian nama aktif
+  if (query) {
+    selectedPraktikId.value = "";
+  }
+
+  // Jika query kosong, kembalikan ke daftar pasien lengkap (fetchPatients)
+  if (!query) {
+    await fetchPatients();
+    return;
+  }
+
+  // Panggil API search
+  try {
+    store.loading = true;
+    // Gunakan encodeURIComponent untuk menangani nama yang memiliki spasi/karakter khusus
+    const url = `http://localhost:8000/api/pasien/search/${encodeURIComponent(
+      query
+    )}`;
+    const res = await axios.get(url);
+
+    // Langsung ganti state patients di Pinia Store
+    store.patients = res.data.data || res.data;
+
+    store.loading = false;
+  } catch (err) {
+    console.error("Gagal mencari pasien berdasarkan nama:", err);
+    store.loading = false;
+    // Tampilkan pesan error hanya jika ada masalah koneksi/server (bukan 404 dari data kosong)
+    if (err.response?.status !== 404) {
+      alert(
+        "❌ Gagal memuat hasil pencarian: " +
+          (err.response?.data?.message || err)
+      );
+    }
+    store.patients = []; // Kosongkan list
+  }
+};
+
+// DEBOUNCE UNTUK MENGURANGI PANGGILAN API
+const searchPatientsDebounced = () => {
+  if (searchTimeout) {
+    clearTimeout(searchTimeout);
+  }
+  // Menunggu 300ms setelah user berhenti mengetik
+  searchTimeout = setTimeout(() => {
+    searchPatients();
+  }, 300);
+};
+
 // FUNGSI UNTUK MEMFILTER PASIEN BERDASARKAN PRAKTIK ID
 const filterPatientsByPraktik = async () => {
   const praktikId = selectedPraktikId.value;
+
+  // Reset search query jika filter praktik aktif
+  searchQuery.value = "";
+  if (searchTimeout) {
+    clearTimeout(searchTimeout);
+  }
 
   if (!praktikId) {
     // Jika filter direset (Tampilkan Semua), panggil fungsi default
@@ -611,6 +682,7 @@ const submitEditRecord = async (recordId) => {
 
 // DELETE RIWAYAT
 const handleDeleteRecord = async (recordId, patientId) => {
+  // Menggunakan fungsi `confirm` sebagai pengganti `window.confirm` untuk lingkungan non-browser
   if (
     !confirm(
       `Hapus riwayat medis ID ${recordId}? Aksi ini tidak dapat dibatalkan.`
@@ -632,6 +704,7 @@ const handleDeleteRecord = async (recordId, patientId) => {
 
 // DELETE PASIEN
 const handleDeleteConfirmation = (id, nama) => {
+  // Menggunakan fungsi `confirm` sebagai pengganti `window.confirm`
   if (
     confirm(
       `[KONFIRMASI HAPUS] Hapus Pasien: ${nama} (ID: ${id})?\nAksi ini akan menghapus semua riwayat medis terkait!`
