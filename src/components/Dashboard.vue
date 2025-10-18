@@ -10,16 +10,13 @@
         ➕ Tambah Pasien Baru
       </button>
 
-      <!-- FIELD PENCARIAN BERDASARKAN NAMA -->
       <input
         type="text"
         v-model="searchQuery"
-        @input="searchPatientsDebounced"
+        @input="handleSearchInput"
         placeholder="🔍 Cari nama pasien..."
         class="block border-gray-300 rounded-md shadow-sm p-2 text-sm border w-full md:w-1/3 max-w-md focus:ring-indigo-500 focus:border-indigo-500"
       />
-      <!-- END FIELD PENCARIAN -->
-
       <select
         v-model="selectedPraktikId"
         @change="filterPatientsByPraktik"
@@ -200,7 +197,7 @@
                   'bg-green-100 text-green-800': pasien.status === 'Aktif',
                   'bg-yellow-100 text-yellow-800':
                     pasien.status === 'Tidak Aktif' ||
-                    pasien.status === 'Selesai', // Menambahkan 'Selesai'
+                    pasien.status === 'Selesai',
                   'bg-red-100 text-red-800': pasien.status === 'Meninggal',
                 }"
                 class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full"
@@ -411,20 +408,27 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from "vue";
-import axios from "axios";
+import { ref, onMounted, watch } from "vue";
 import { usePasienStore } from "@/stores/pasienStore";
 import { useRouter } from "vue-router";
 import { storeToRefs } from "pinia";
-import { usePraktikStore } from "@/stores/praktikStore"; // 👈 IMPORT BARU
+import { usePraktikStore } from "@/stores/praktikStore";
 
 const store = usePasienStore();
 const router = useRouter();
-const praktikStore = usePraktikStore(); // 👈 INISIALISASI BARU
-const { praktikList } = storeToRefs(praktikStore); // 👈 AKSES praktikList BARU
+const praktikStore = usePraktikStore();
+
+// --- Akses State dan Actions dari Pinia ---
+const { praktikList } = storeToRefs(praktikStore);
 const { fetchPraktikList } = praktikStore;
 
-const { patients, loading } = storeToRefs(store);
+// Pasien store ref dan actions
+const {
+  patients,
+  loading,
+  searchQuery: storeSearchQuery,
+  selectedPraktikId: storeSelectedPraktikId,
+} = storeToRefs(store);
 const {
   updatePatient,
   addMedicalRecord,
@@ -432,30 +436,33 @@ const {
   deleteMedicalRecord,
   deletePatient,
   fetchPatients,
-  // 👈 Asumsi action filterPatientsByPraktik telah ditambahkan di store
   filterPatientsByPraktik: storeFilterPatientsByPraktik,
+  // 💡 Akses action pencarian yang sudah dipindahkan ke store
+  searchPatients: storeSearchPatients,
 } = store;
 
+// --- State Lokal Komponen ---
 const expandedId = ref(null);
 const formVisibleId = ref(null);
 const editingId = ref(null);
+const editingRecordId = ref(null);
 
-// STATE BARU UNTUK PENCARIAN
-const searchQuery = ref("");
+// Sinkronisasi state lokal dengan Pinia Store
+const searchQuery = ref(storeSearchQuery.value);
+const selectedPraktikId = ref(storeSelectedPraktikId.value);
+
 let searchTimeout = null;
 
-// STATE UNTUK FILTER
-const selectedPraktikId = ref("");
-
+// Form untuk Edit Pasien
 const editForm = ref({ nama: "", tanggal: "", status: "", praktik_id: "" });
+// Form untuk Input Riwayat Medis Baru
 const medisForm = ref({
   tanggal_periksa: "",
   diagnosis: "",
   obat: "",
   lokasi_berobat: "",
 });
-
-const editingRecordId = ref(null);
+// Form untuk Edit Riwayat Medis
 const editRecordForm = ref({
   tanggal_periksa: "",
   diagnosis: "",
@@ -463,60 +470,45 @@ const editRecordForm = ref({
   lokasi_berobat: "",
 });
 
-const goToCreatePage = () => router.push({ name: "PasienCreate" });
+// --- Lifecycle Hook ---
+onMounted(async () => {
+  // Muat data default
+  await fetchPatients();
+  await fetchPraktikList();
+});
 
-// FUNGSI PENCARIAN PASIEN BERDASARKAN NAMA
-const searchPatients = async () => {
-  const query = searchQuery.value.trim(); // Reset filter praktik jika pencarian nama aktif
+// --- Watchers untuk Sinkronisasi State ---
+// Sinkronkan perubahan searchQuery (lokal) ke store
+watch(searchQuery, (newVal) => {
+  store.searchQuery = newVal;
+});
 
-  if (query) {
-    selectedPraktikId.value = "";
-  } // Jika query kosong, kembalikan ke daftar pasien lengkap (fetchPatients)
+// Sinkronkan perubahan selectedPraktikId (lokal) ke store
+watch(selectedPraktikId, (newVal) => {
+  store.selectedPraktikId = newVal;
+});
 
-  if (!query) {
-    await fetchPatients();
-    return;
-  } // Panggil API search (menggunakan implementasi lokal Anda)
+// --- Fungsi Pencarian dan Filter ---
 
-  try {
-    store.loading = true; // Gunakan encodeURIComponent untuk menangani nama yang memiliki spasi/karakter khusus
-    const url = `http://localhost:8000/api/pasien/search/${encodeURIComponent(
-      query
-    )}`;
-    const res = await axios.get(url); // Langsung ganti state patients di Pinia Store
-
-    store.patients = res.data.data || res.data;
-
-    store.loading = false;
-  } catch (err) {
-    console.error("Gagal mencari pasien berdasarkan nama:", err);
-    store.loading = false; // Tampilkan pesan error hanya jika ada masalah koneksi/server (bukan 404 dari data kosong)
-    if (err.response?.status !== 404) {
-      alert(
-        "❌ Gagal memuat hasil pencarian: " +
-          (err.response?.data?.message || err)
-      );
-    }
-    store.patients = []; // Kosongkan list
-  }
-};
-
-// DEBOUNCE UNTUK MENGURANGI PANGGILAN API
-const searchPatientsDebounced = () => {
+// 💡 Handler input yang memanggil Debounce
+const handleSearchInput = () => {
   if (searchTimeout) {
     clearTimeout(searchTimeout);
-  } // Menunggu 300ms setelah user berhenti mengetik
+  }
+  // Menunggu 300ms setelah user berhenti mengetik
   searchTimeout = setTimeout(() => {
-    searchPatients();
+    // Panggil action search dari store. Logika filter reset dan fetch sudah diurus di store.
+    storeSearchPatients();
   }, 300);
 };
 
-// FUNGSI UNTUK MEMFILTER PASIEN BERDASARKAN PRAKTIK ID (MEMANGGIL DARI STORE)
+// FUNGSI UNTUK MEMFILTER PASIEN BERDASARKAN PRAKTIK ID
 const filterPatientsByPraktik = async () => {
   const praktikId = selectedPraktikId.value;
 
-  // 🚨 LOGIKA PENTING: Reset search query jika filter praktik diaktifkan
+  // 🚨 LOGIKA PENTING: Reset search query (lokal dan store) karena filter praktik diaktifkan
   searchQuery.value = "";
+  store.searchQuery = ""; // Pastikan store juga di-reset
   if (searchTimeout) {
     clearTimeout(searchTimeout);
   }
@@ -526,18 +518,15 @@ const filterPatientsByPraktik = async () => {
   await storeFilterPatientsByPraktik(praktikId);
 };
 
-onMounted(async () => {
-  // Muat semua pasien (default) dan daftar praktik saat pertama kali dimuat
-  await fetchPatients();
-  await fetchPraktikList();
-});
+// --- Fungsi Navigasi dan CRUD Pasien & Riwayat Medis ---
 
-// ... (sisa kode fungsi lainnya tetap sama) ...
+const goToCreatePage = () => router.push({ name: "PasienCreate" });
+
 // EDIT PASIEN
 const handleEditPasien = (pasien) => {
   editingId.value = pasien.id;
   editForm.value = {
-    nama: pasien.nama, // Pastikan tanggal diformat ke YYYY-MM-DD
+    nama: pasien.nama,
     tanggal: pasien.tanggal?.substring(0, 10) || "",
     status: pasien.status,
     praktik_id: pasien.praktik_id || "",
@@ -550,13 +539,15 @@ const submitEdit = async (id) => {
     editingId.value = null;
     alert("✅ Data pasien berhasil diperbarui!");
   } catch (err) {
-    alert("❌ Gagal update pasien: " + (err.response?.data?.message || err));
+    alert(
+      "❌ Gagal update pasien: " +
+        (err.response?.data?.message || err.message || err)
+    );
   }
 };
 
 // toggle riwayat expand
 const toggleRiwayat = (id) => {
-  // if opening, ensure we reset forms
   if (expandedId.value === id) {
     expandedId.value = null;
     formVisibleId.value = null;
@@ -591,16 +582,17 @@ const resetMedisForm = () => {
 
 // SUBMIT TAMBAH RIWAYAT
 const submitMedis = async (patientId) => {
-  // simple client-side validation
   if (!medisForm.value.tanggal_periksa || !medisForm.value.diagnosis) {
     alert("Isi tanggal periksa dan diagnosis terlebih dahulu.");
     return;
   }
 
   try {
-    await addMedicalRecord({ pasien_id: patientId, ...medisForm.value }); // After success, close form and refresh patients (store already refreshes in action)
+    await addMedicalRecord({ pasien_id: patientId, ...medisForm.value });
     formVisibleId.value = null;
-    resetMedisForm(); // Memuat ulang data pasien setelah menambahkan riwayat, untuk melihat update
+    resetMedisForm();
+    // fetchPatients() di sini tidak terlalu perlu jika addMedicalRecord di store sudah memanggil fetchPatients()
+    // Namun, kita tetap memanggilnya di sini untuk memastikan data terbaru terambil, meskipun agak redundan.
     await fetchPatients();
     alert("✅ Riwayat medis ditambahkan!");
   } catch (err) {
@@ -620,7 +612,7 @@ const handleEditRecord = (record) => {
     diagnosis: record.diagnosis || "",
     obat: record.obat || "",
     lokasi_berobat: record.lokasi_berobat || "",
-  }; // hide add form
+  };
   formVisibleId.value = null;
 };
 
@@ -629,7 +621,7 @@ const submitEditRecord = async (recordId) => {
   try {
     await updateMedicalRecord(recordId, editRecordForm.value);
     editingRecordId.value = null;
-    await fetchPatients();
+    await fetchPatients(); // Muat ulang setelah update
     alert("✅ Riwayat medis berhasil diperbarui!");
   } catch (err) {
     console.error("Gagal update riwayat:", err);
@@ -642,7 +634,6 @@ const submitEditRecord = async (recordId) => {
 
 // DELETE RIWAYAT
 const handleDeleteRecord = async (recordId, patientId) => {
-  // Menggunakan fungsi `confirm` sebagai pengganti `window.confirm` untuk lingkungan non-browser
   if (
     !confirm(
       `Hapus riwayat medis ID ${recordId}? Aksi ini tidak dapat dibatalkan.`
@@ -652,6 +643,8 @@ const handleDeleteRecord = async (recordId, patientId) => {
 
   try {
     await deleteMedicalRecord(recordId, patientId);
+    // Delete action di store sudah mengurus update state patients secara lokal,
+    // jadi fetchPatients() mungkin tidak diperlukan di sini
     await fetchPatients();
   } catch (err) {
     console.error("Gagal hapus riwayat:", err);
@@ -663,14 +656,22 @@ const handleDeleteRecord = async (recordId, patientId) => {
 };
 
 // DELETE PASIEN
-const handleDeleteConfirmation = (id, nama) => {
-  // Menggunakan fungsi `confirm` sebagai pengganti `window.confirm`
+const handleDeleteConfirmation = async (id, nama) => {
   if (
     confirm(
       `[KONFIRMASI HAPUS] Hapus Pasien: ${nama} (ID: ${id})?\nAksi ini akan menghapus semua riwayat medis terkait!`
     )
   ) {
-    deletePatient(id).then(() => fetchPatients());
+    try {
+      await deletePatient(id);
+      await fetchPatients();
+    } catch (err) {
+      console.error("Gagal hapus pasien:", err);
+      alert(
+        "❌ Gagal hapus pasien: " +
+          (err.response?.data?.message || err.message || err)
+      );
+    }
   }
 };
 </script>
