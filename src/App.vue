@@ -5,14 +5,25 @@
       class="w-64 bg-blue-800 text-white flex-shrink-0 shadow-2xl p-4 hidden lg:block"
     >
       <div class="mb-8 p-2">
-        <h1
-          class="text-xl font-extrabold text-blue-100 border-b border-blue-600 pb-2"
-        >
-          Dr. Johan
-        </h1>
-        <p class="text-blue-300 text-xs">Manajemen Praktik</p>
-      </div>
+        <div class="flex items-center">
+          <img
+            src="https://img.okadoc.com/plain/200x200/photos/practitioner/photo/73503/okadoc-doctor-psychiatrist-johan-kurniawan-20200420165834.jpg"
+            alt="Foto Dr. Johan"
+            class="w-14 h-14 rounded-full object-cover shadow-xl border-2 border-blue-400 mr-3 flex-shrink-0"
+          />
 
+          <div class="text-left overflow-hidden">
+            <h1 class="text-lg font-extrabold text-blue-100 truncate">
+              dr. Johan
+            </h1>
+            <p class="text-blue-300 text-xs mt-0.5 whitespace-nowrap">
+              Spesialis Kedokteran Jiwa
+            </p>
+          </div>
+        </div>
+
+        <div class="mt-4 border-b border-blue-600 pb-2"></div>
+      </div>
       <nav>
         <h2
           class="text-sm font-semibold text-blue-300 mb-3 uppercase tracking-wider"
@@ -135,20 +146,18 @@
           class="flex justify-between items-center mb-6 border-b-4 border-blue-200 pb-3"
         >
           <div class="flex items-center">
-            <img
-              src="https://img.okadoc.com/plain/200x200/photos/practitioner/photo/73503/okadoc-doctor-psychiatrist-johan-kurniawan-20200420165834.jpg"
-              alt="Foto Dr. Johan"
-              class="w-16 h-16 rounded-full object-cover shadow-xl border-2 border-blue-200 mr-4"
-            />
             <div>
               <h1 class="text-2xl font-extrabold text-blue-800">
-                Manajemen Praktik dr. Johan
+                {{ pageTitle }}
               </h1>
-              <p class="text-gray-600 text-sm">
-                Spesialis Kedokteran Jiwa atau Psikiatri
-              </p>
             </div>
           </div>
+          <button
+            @click="handleLogout"
+            class="bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-4 rounded transition text-sm"
+          >
+            🚪 Logout
+          </button>
         </header>
 
         <div :class="{ 'min-h-[70vh]': !needsFullLayout }">
@@ -163,14 +172,29 @@
 import { computed, onMounted } from "vue";
 import { usePasienStore } from "@/stores/pasienStore";
 import { useRoute } from "vue-router";
+import { useAuthStore } from "./stores/auth";
 
 const store = usePasienStore();
 const route = useRoute();
+const authStore = useAuthStore();
 
 const needsFullLayout = computed(() => {
   // Cek jika meta field 'fullLayout' diatur ke true untuk rute ini.
   return route.meta.fullLayout === true;
 });
+
+const handleLogout = () => {
+  authStore.logout();
+  router.push({ name: "Login" });
+};
+
+// **START: Penambahan Computed Property untuk Judul Halaman**
+const pageTitle = computed(() => {
+  // Mengambil judul dari meta, dengan fallback ke judul default
+  const defaultTitle = "Manajemen Praktik dr. Johan";
+  return route.meta.documentTitle || defaultTitle;
+});
+// **END: Penambahan Computed Property untuk Judul Halaman**
 
 onMounted(() => {
   if (!needsFullLayout.value) {

@@ -17,19 +17,19 @@ const routes = [
     path: "/dashboard",
     name: "Dashboard",
     component: Dashboard,
-    meta: { requiresAuth: true, title: "Dashboard", fullLayout: false },
+    meta: { requiresAuth: true, documentTitle: "Dashboard", fullLayout: false },
   },
   {
     path: "/pasien/create",
     name: "PasienCreate",
     component: PasienCreatePage,
-    meta: { requiresAuth: true, title: "Daftar Pasien", fullLayout: false },
+    meta: { requiresAuth: true, tdocumentTitle: "Daftar Pasien", fullLayout: false },
   },
   {
-    path: "/daftar",
+    path: "/daftar-praktik",
     name: "DaftarPraktik",
     component: DaftarPraktik,
-    meta: { requiresAuth: true, title: "Daftar Praktik", fullLayout: false },
+    meta: { requiresAuth: true, documentTitle: "Daftar Praktik", fullLayout: false },
   },
 ];
 

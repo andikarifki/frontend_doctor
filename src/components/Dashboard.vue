@@ -29,13 +29,6 @@
           ➕ Tambah Pasien Baru
         </button>
       </div>
-
-      <button
-        @click="handleLogout"
-        class="bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-4 rounded transition text-sm"
-      >
-        🚪 Logout
-      </button>
     </section>
 
     <table class="min-w-full divide-y divide-gray-200 table-fixed">
@@ -415,11 +408,9 @@ import axios from "axios";
 import { usePasienStore } from "@/stores/pasienStore";
 import { useRouter } from "vue-router";
 import { storeToRefs } from "pinia";
-import { useAuthStore } from "../stores/auth";
 
 const store = usePasienStore();
 const router = useRouter();
-const authStore = useAuthStore();
 
 const { patients, loading } = storeToRefs(store);
 const {
@@ -456,11 +447,6 @@ const editRecordForm = ref({
 });
 
 const goToCreatePage = () => router.push({ name: "PasienCreate" });
-
-const handleLogout = () => {
-  authStore.logout();
-  router.push({ name: "Login" });
-};
 
 // load praktik list
 const fetchPraktikList = async () => {
