@@ -46,17 +46,17 @@
             No
           </th>
           <th
-            class="w-[15%] px-4 py-3 text-left text-xs font-medium uppercase tracking-wider"
+            class="w-[13%] px-4 py-3 text-left text-xs font-medium uppercase tracking-wider"
           >
             Nama
           </th>
           <th
-            class="w-[13%] px-4 py-3 text-left text-xs font-medium uppercase tracking-wider"
+            class="w-[20%] px-4 py-3 text-left text-xs font-medium uppercase tracking-wider"
           >
             Tempat Periksa
           </th>
           <th
-            class="w-[12%] px-4 py-3 text-left text-xs font-medium uppercase tracking-wider"
+            class="w-[20%] px-4 py-3 text-left text-xs font-medium uppercase tracking-wider"
           >
             Tanggal Daftar
           </th>
@@ -66,7 +66,7 @@
             Status
           </th>
           <th
-            class="w-[43%] px-4 py-3 text-center text-xs font-medium uppercase tracking-wider"
+            class="w-[30%] px-4 py-3 text-center text-xs font-medium uppercase tracking-wider"
           >
             Riwayat & Aksi
           </th>
@@ -281,7 +281,7 @@
                     type="text"
                     v-model="medisForm.lokasi_berobat"
                     required
-                    placeholder="Lokasi Berobat"
+                    placeholder="Tindakan"
                     class="block w-full border-gray-300 rounded-md shadow-sm p-2 text-sm"
                   />
                 </div>
@@ -372,7 +372,7 @@
                         type="text"
                         v-model="editRecordForm.lokasi_berobat"
                         required
-                        placeholder="Lokasi Berobat"
+                        placeholder="Tindakan"
                         class="block w-full border-gray-300 rounded-md shadow-sm p-1.5 text-xs"
                       />
                       <div class="flex space-x-2 pt-1">
