@@ -56,7 +56,7 @@
           </li>
           <li>
             <router-link
-              to="/daftar-praktik"
+              to="/praktik"
               class="flex items-center p-3 rounded-lg transition duration-150 ease-in-out font-medium text-blue-100 hover:bg-blue-700"
               active-class="bg-blue-600 shadow-md"
             >

@@ -1,7 +1,7 @@
 import { createRouter, createWebHistory } from "vue-router";
 import Login from "../components/Login.vue";
 import PasienCreatePage from "../views/PasienCreatePage.vue";
-import DaftarPraktik from "../views/DaftarPraktik.vue";
+import Praktik from "../views/Praktik.vue";
 import Dashboard from "../views/Dashboard.vue";
 
 const isAuthenticated = () => localStorage.getItem("authToken") !== null;
@@ -26,9 +26,9 @@ const routes = [
     meta: { requiresAuth: true, tdocumentTitle: "Daftar Pasien", fullLayout: false },
   },
   {
-    path: "/daftar-praktik",
-    name: "DaftarPraktik",
-    component: DaftarPraktik,
+    path: "/praktik",
+    name: "Praktik",
+    component: Praktik,
     meta: { requiresAuth: true, documentTitle: "Daftar Praktik", fullLayout: false },
   },
 ];
