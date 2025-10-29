@@ -1,8 +1,8 @@
 import { createRouter, createWebHistory } from "vue-router";
 import Login from "../components/Login.vue";
-import Dashboard from "../components/Dashboard.vue";
 import PasienCreatePage from "../views/PasienCreatePage.vue";
 import DaftarPraktik from "../views/DaftarPraktik.vue";
+import Dashboard from "../views/Dashboard.vue";
 
 const isAuthenticated = () => localStorage.getItem("authToken") !== null;
 
