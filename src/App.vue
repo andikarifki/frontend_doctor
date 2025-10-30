@@ -1,9 +1,12 @@
 <template>
   <div class="min-h-screen bg-gray-100 flex">
+    <!-- Sidebar untuk desktop dan mobile -->
     <aside
-      v-if="!needsFullLayout"
-      class="w-64 bg-blue-800 text-white flex-shrink-0 shadow-2xl p-4 hidden lg:block"
+      v-if="!needsFullLayout && (showSidebar || isDesktop)"
+      class="fixed inset-y-0 left-0 w-64 bg-blue-800 text-white p-4 shadow-2xl z-50 transform transition-transform duration-300 lg:relative lg:translate-x-0"
+      :class="{ '-translate-x-full': !showSidebar && !isDesktop }"
     >
+      <!-- Profil -->
       <div class="mb-8 p-2">
         <div class="flex items-center">
           <img
@@ -11,7 +14,6 @@
             alt="Foto Dr. Johan"
             class="w-14 h-14 rounded-full object-cover shadow-xl border-2 border-blue-400 mr-3 flex-shrink-0"
           />
-
           <div class="text-left overflow-hidden">
             <h1 class="text-lg font-extrabold text-blue-100 truncate">
               dr. Johan
@@ -21,9 +23,10 @@
             </p>
           </div>
         </div>
-
         <div class="mt-4 border-b border-blue-600 pb-2"></div>
       </div>
+
+      <!-- Menu -->
       <nav>
         <h2
           class="text-sm font-semibold text-blue-300 mb-3 uppercase tracking-wider"
@@ -37,12 +40,12 @@
               class="flex items-center p-3 rounded-lg transition duration-150 ease-in-out font-medium text-blue-100 hover:bg-blue-700"
               active-class="bg-blue-600 shadow-md"
             >
+              <!-- Icon Dashboard -->
               <svg
                 class="w-5 h-5 mr-3"
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
-                xmlns="http://www.w3.org/2000/svg"
               >
                 <path
                   stroke-linecap="round"
@@ -60,12 +63,12 @@
               class="flex items-center p-3 rounded-lg transition duration-150 ease-in-out font-medium text-blue-100 hover:bg-blue-700"
               active-class="bg-blue-600 shadow-md"
             >
+              <!-- Icon Praktik -->
               <svg
                 class="w-5 h-5 mr-3"
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
-                xmlns="http://www.w3.org/2000/svg"
               >
                 <path
                   stroke-linecap="round"
@@ -83,12 +86,12 @@
               class="flex items-center p-3 rounded-lg transition duration-150 ease-in-out font-medium text-blue-100 hover:bg-blue-700"
               active-class="bg-blue-600 shadow-md"
             >
+              <!-- Icon Jadwal -->
               <svg
                 class="w-5 h-5 mr-3"
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
-                xmlns="http://www.w3.org/2000/svg"
               >
                 <path
                   stroke-linecap="round"
@@ -106,12 +109,12 @@
               class="flex items-center p-3 rounded-lg transition duration-150 ease-in-out font-medium text-blue-100 hover:bg-blue-700"
               active-class="bg-blue-600 shadow-md"
             >
+              <!-- Icon Pengaturan -->
               <svg
                 class="w-5 h-5 mr-3"
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
-                xmlns="http://www.w3.org/2000/svg"
               >
                 <path
                   stroke-linecap="round"
@@ -133,6 +136,14 @@
       </nav>
     </aside>
 
+    <!-- Overlay untuk mobile -->
+    <div
+      v-if="showSidebar && !isDesktop"
+      class="fixed inset-0 bg-black opacity-50 z-40"
+      @click="showSidebar = false"
+    ></div>
+
+    <!-- Konten utama -->
     <div class="flex-grow p-4 sm:p-6 lg:p-8 overflow-y-auto">
       <div
         class="max-w-6xl mx-auto bg-white rounded-xl shadow-2xl h-full"
@@ -141,16 +152,19 @@
           'p-6 sm:p-8': !needsFullLayout,
         }"
       >
+        <!-- Header -->
         <header
           v-if="!needsFullLayout"
           class="flex justify-between items-center mb-6 border-b-4 border-blue-200 pb-3"
         >
           <div class="flex items-center">
-            <div>
-              <h1 class="text-2xl font-extrabold text-blue-800">
-                {{ pageTitle }}
-              </h1>
-            </div>
+            <!-- Tombol Hamburger mobile -->
+            <button @click="showSidebar = !showSidebar" class="lg:hidden mr-3">
+              ☰
+            </button>
+            <h1 class="text-2xl font-extrabold text-blue-800">
+              {{ pageTitle }}
+            </h1>
           </div>
           <button
             @click="handleLogout"
@@ -160,6 +174,7 @@
           </button>
         </header>
 
+        <!-- Konten halaman -->
         <div :class="{ 'min-h-[70vh]': !needsFullLayout }">
           <router-view></router-view>
         </div>
@@ -169,33 +184,41 @@
 </template>
 
 <script setup>
-import { computed, onMounted } from "vue";
+import { ref, computed, onMounted } from "vue";
+import { useRoute, useRouter } from "vue-router";
 import { usePasienStore } from "@/stores/pasienStore";
-import { useRoute } from "vue-router";
-import { useAuthStore } from "./stores/auth";
+import { useAuthStore } from "@/stores/auth";
 
 const store = usePasienStore();
 const route = useRoute();
+const router = useRouter();
 const authStore = useAuthStore();
 
-const needsFullLayout = computed(() => {
-  // Cek jika meta field 'fullLayout' diatur ke true untuk rute ini.
-  return route.meta.fullLayout === true;
+// Sidebar mobile toggle
+const showSidebar = ref(false);
+
+// Detect desktop (lg ke atas)
+const isDesktop = ref(window.innerWidth >= 1024);
+window.addEventListener("resize", () => {
+  isDesktop.value = window.innerWidth >= 1024;
+  if (isDesktop.value) showSidebar.value = false;
 });
 
+// Layout full atau normal
+const needsFullLayout = computed(() => route.meta.fullLayout === true);
+
+// Logout
 const handleLogout = () => {
   authStore.logout();
   router.push({ name: "Login" });
 };
 
-// **START: Penambahan Computed Property untuk Judul Halaman**
-const pageTitle = computed(() => {
-  // Mengambil judul dari meta, dengan fallback ke judul default
-  const defaultTitle = "Manajemen Praktik dr. Johan";
-  return route.meta.documentTitle || defaultTitle;
-});
-// **END: Penambahan Computed Property untuk Judul Halaman**
+// Judul halaman
+const pageTitle = computed(
+  () => route.meta.documentTitle || "Manajemen Praktik dr. Johan"
+);
 
+// Fetch pasien
 onMounted(() => {
   if (!needsFullLayout.value) {
     store.fetchPatients();
