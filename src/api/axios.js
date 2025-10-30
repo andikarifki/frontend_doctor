@@ -1,24 +1,25 @@
 // src/api/axios.js
-
 import axios from "axios";
 
-// Buat instance dengan Base URL API Laravel Anda
 const api = axios.create({
-  baseURL: "http://127.0.0.1:8000/api", // GANTI DENGAN URL API ANDA
+  baseURL: import.meta.env.VITE_API_BASE_URL, // 🔥 ambil dari .env
   headers: {
     Accept: "application/json",
     "Content-Type": "application/json",
   },
+  withCredentials: true, // penting kalau pakai Sanctum
 });
 
-// Interceptor: Menambahkan token ke header sebelum setiap permintaan
+// Interceptor: tambah Authorization kalau ada token
 api.interceptors.request.use((config) => {
-  const token = localStorage.getItem("authToken"); // Ambil token dari Local Storage
+  const token = localStorage.getItem("authToken");
   if (token) {
-    // Menambahkan header otentikasi untuk Laravel Sanctum
     config.headers["Authorization"] = `Bearer ${token}`;
   }
   return config;
 });
 
-export default api; // Ekspor untuk digunakan di Pinia Store
+// 🔍 Log untuk cek koneksi ENV
+console.log("🌍 Base URL dari ENV:", import.meta.env.VITE_API_BASE_URL);
+
+export default api;
