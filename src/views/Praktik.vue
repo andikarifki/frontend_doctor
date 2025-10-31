@@ -181,29 +181,85 @@
           </thead>
 
           <tbody class="divide-y divide-gray-100">
-            <tr v-for="item in praktikStore.praktikList" :key="item.id">
-              <td class="px-6 py-4 font-bold text-gray-900">#{{ item.id }}</td>
-              <td class="px-6 py-4 text-gray-700">
-                {{ item.lokasi_praktik || "— Belum Ditentukan" }}
-              </td>
-              <td class="px-6 py-4 text-blue-600 font-bold">
-                {{ formatDate(item.tanggal_daftar) }}
-              </td>
-              <td class="px-6 py-4 space-x-3">
-                <button
-                  @click="startEdit(item)"
-                  class="text-blue-600 hover:text-blue-800 font-bold"
-                >
-                  Edit
-                </button>
-                <button
-                  @click="deleteItem(item.id)"
-                  class="text-red-600 hover:text-red-800 font-bold"
-                >
-                  Hapus
-                </button>
-              </td>
-            </tr>
+            <template v-for="item in praktikStore.praktikList" :key="item.id">
+              <tr>
+                <td class="px-6 py-4 font-bold text-gray-900">
+                  #{{ item.id }}
+                </td>
+                <td class="px-6 py-4 text-gray-700">
+                  {{ item.lokasi_praktik || "— Belum Ditentukan" }}
+                </td>
+                <td class="px-6 py-4 text-blue-600 font-bold">
+                  {{ formatDate(item.tanggal_daftar) }}
+                </td>
+                <td class="px-6 py-4 space-x-3">
+                  <button
+                    @click="startEdit(item)"
+                    class="text-blue-600 hover:text-blue-800 font-bold"
+                  >
+                    Edit
+                  </button>
+                  <button
+                    @click="deleteItem(item.id)"
+                    class="text-red-600 hover:text-red-800 font-bold"
+                  >
+                    Hapus
+                  </button>
+                </td>
+              </tr>
+
+              <!-- Baris edit muncul di bawah data -->
+              <tr
+                v-if="editingItem && editingItem.id === item.id"
+                class="bg-blue-50"
+              >
+                <td colspan="4" class="p-6">
+                  <form
+                    @submit.prevent="updatePraktik"
+                    class="grid grid-cols-1 md:grid-cols-6 gap-4 items-end"
+                  >
+                    <div class="col-span-2">
+                      <label class="block text-sm font-bold text-gray-700 mb-1">
+                        Lokasi Praktik
+                      </label>
+                      <input
+                        v-model="editLocation"
+                        type="text"
+                        class="w-full px-4 py-2.5 border-2 border-gray-300 rounded-xl focus:border-blue-600"
+                      />
+                    </div>
+
+                    <div class="col-span-2">
+                      <label class="block text-sm font-bold text-gray-700 mb-1">
+                        Tanggal Mulai
+                      </label>
+                      <input
+                        v-model="editDate"
+                        type="date"
+                        required
+                        class="w-full px-4 py-2.5 border-2 border-gray-300 rounded-xl focus:border-blue-600"
+                      />
+                    </div>
+
+                    <div class="col-span-2 flex gap-3">
+                      <button
+                        type="submit"
+                        class="flex-1 px-6 py-2.5 bg-green-600 text-white font-bold rounded-xl hover:bg-green-700 transition"
+                      >
+                        Simpan
+                      </button>
+                      <button
+                        type="button"
+                        @click="cancelEdit"
+                        class="flex-1 px-6 py-2.5 bg-gray-400 text-white font-bold rounded-xl hover:bg-gray-500 transition"
+                      >
+                        Batal
+                      </button>
+                    </div>
+                  </form>
+                </td>
+              </tr>
+            </template>
           </tbody>
         </table>
       </div>
@@ -233,6 +289,8 @@ const { praktikList } = storeToRefs(praktikStore);
 
 const newDate = ref("");
 const newLocation = ref("");
+const editDate = ref("");
+const editLocation = ref("");
 const formErrors = ref(null);
 const editingItem = ref(null);
 
@@ -257,14 +315,57 @@ const addPraktik = async () => {
   }
 };
 
+const startEdit = (item) => {
+  editingItem.value = { ...item };
+
+  // 🔧 Ambil bagian tanggal saja dari format ISO Laravel
+  if (item.tanggal_daftar) {
+    // Jika formatnya ISO (mengandung "T")
+    if (item.tanggal_daftar.includes("T")) {
+      editDate.value = item.tanggal_daftar.split("T")[0];
+    } else {
+      // Jika formatnya sudah YYYY-MM-DD atau format aneh lain
+      try {
+        const d = new Date(item.tanggal_daftar);
+        editDate.value = d.toISOString().split("T")[0];
+      } catch {
+        editDate.value = "";
+      }
+    }
+  } else {
+    editDate.value = "";
+  }
+
+  // Lokasi praktik
+  editLocation.value = item.lokasi_praktik || "";
+};
+
+const updatePraktik = async () => {
+  if (!editingItem.value) return;
+  const payload = {
+    tanggal_daftar: editDate.value,
+    lokasi_praktik: editLocation.value || null,
+  };
+  const res = await praktikStore.updatePraktik(editingItem.value.id, payload);
+  if (res?.validationErrors) {
+    formErrors.value = res.validationErrors;
+  } else {
+    editingItem.value = null;
+    formErrors.value = null;
+  }
+};
+
+const cancelEdit = () => {
+  editingItem.value = null;
+  editDate.value = "";
+  editLocation.value = "";
+  formErrors.value = null;
+};
+
 const deleteItem = async (id) => {
   if (confirm(`Yakin mau hapus praktik ID #${id}?`)) {
     await praktikStore.deletePraktik(id);
   }
-};
-
-const startEdit = (item) => {
-  alert(`Kamu bisa tambahkan form edit di bawah item #${item.id}`);
 };
 
 onMounted(() => {
