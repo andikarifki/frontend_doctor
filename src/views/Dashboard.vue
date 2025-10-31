@@ -17,6 +17,7 @@
         placeholder="🔍 Cari nama pasien..."
         class="block border-gray-300 rounded-md shadow-sm p-2 text-sm border w-full md:w-1/3 max-w-md focus:ring-indigo-500 focus:border-indigo-500"
       />
+
       <select
         v-model="selectedPraktikId"
         @change="filterPatientsByPraktik"
@@ -187,7 +188,7 @@
             <td
               class="px-4 py-3 text-sm text-gray-600 whitespace-nowrap overflow-hidden text-ellipsis"
             >
-              {{ pasien.tanggal ? pasien.tanggal.substring(0, 10) : "-" }}
+              {{ formatDateID(pasien.tanggal) }}
             </td>
             <td
               class="px-4 py-3 whitespace-nowrap overflow-hidden text-ellipsis"
@@ -318,7 +319,7 @@
                         <strong class="text-gray-700">Diagnosis:</strong>
                         {{ record.diagnosis }} |
                         <strong class="text-gray-700">Tgl:</strong>
-                        {{ record.tanggal_periksa.substring(0, 10) }} |
+                        **{{ formatDateID(record.tanggal_periksa) }}** |
                         <strong class="text-gray-700">Obat:</strong>
                         {{ record.obat }} |
                         <strong class="text-gray-700">Tindakan:</strong>
@@ -418,17 +419,12 @@ const store = usePasienStore();
 const router = useRouter();
 const praktikStore = usePraktikStore();
 
-// --- Akses State dan Actions dari Pinia ---
+// --- Akses State dan Actions Pinia ---
 const { praktikList } = storeToRefs(praktikStore);
 const { fetchPraktikList } = praktikStore;
 
-// Pasien store ref dan actions
-const {
-  patients,
-  loading,
-  searchQuery: storeSearchQuery,
-  selectedPraktikId: storeSelectedPraktikId,
-} = storeToRefs(store);
+const { patients, loading, searchQuery, selectedPraktikId } =
+  storeToRefs(store);
 const {
   updatePatient,
   addMedicalRecord,
@@ -437,9 +433,26 @@ const {
   deletePatient,
   fetchPatients,
   filterPatientsByPraktik: storeFilterPatientsByPraktik,
-  // 💡 Akses action pencarian yang sudah dipindahkan ke store
   searchPatients: storeSearchPatients,
 } = store;
+
+// --- Fungsi Format Tanggal (DD/MM/YYYY) ---
+const formatDateID = (dateString) => {
+  if (!dateString) return "-";
+  try {
+    const date = new Date(dateString);
+    // Menggunakan id-ID untuk format Hari/Bulan/Tahun
+    return date.toLocaleDateString("id-ID", {
+      year: "numeric",
+      month: "2-digit",
+      day: "2-digit",
+    });
+  } catch (error) {
+    console.error("Gagal format tanggal:", error);
+    // Fallback jika formatting gagal
+    return dateString.substring(0, 10) || "-";
+  }
+};
 
 // --- State Lokal Komponen ---
 const expandedId = ref(null);
@@ -447,22 +460,16 @@ const formVisibleId = ref(null);
 const editingId = ref(null);
 const editingRecordId = ref(null);
 
-// Sinkronisasi state lokal dengan Pinia Store
-const searchQuery = ref(storeSearchQuery.value);
-const selectedPraktikId = ref(storeSelectedPraktikId.value);
-
 let searchTimeout = null;
 
-// Form untuk Edit Pasien
+// Form Data
 const editForm = ref({ nama: "", tanggal: "", status: "", praktik_id: "" });
-// Form untuk Input Riwayat Medis Baru
 const medisForm = ref({
   tanggal_periksa: "",
   diagnosis: "",
   obat: "",
   lokasi_berobat: "",
 });
-// Form untuk Edit Riwayat Medis
 const editRecordForm = ref({
   tanggal_periksa: "",
   diagnosis: "",
@@ -472,49 +479,30 @@ const editRecordForm = ref({
 
 // --- Lifecycle Hook ---
 onMounted(async () => {
-  // Muat data default
   await fetchPatients();
   await fetchPraktikList();
 });
 
-// --- Watchers untuk Sinkronisasi State ---
-// Sinkronkan perubahan searchQuery (lokal) ke store
-watch(searchQuery, (newVal) => {
-  store.searchQuery = newVal;
-});
-
-// Sinkronkan perubahan selectedPraktikId (lokal) ke store
-watch(selectedPraktikId, (newVal) => {
-  store.selectedPraktikId = newVal;
-});
-
 // --- Fungsi Pencarian dan Filter ---
 
-// 💡 Handler input yang memanggil Debounce
 const handleSearchInput = () => {
   if (searchTimeout) {
     clearTimeout(searchTimeout);
   }
-  // Menunggu 300ms setelah user berhenti mengetik
   searchTimeout = setTimeout(() => {
-    // Panggil action search dari store. Logika filter reset dan fetch sudah diurus di store.
     storeSearchPatients();
   }, 300);
 };
 
-// FUNGSI UNTUK MEMFILTER PASIEN BERDASARKAN PRAKTIK ID
 const filterPatientsByPraktik = async () => {
   const praktikId = selectedPraktikId.value;
 
-  // 🚨 LOGIKA PENTING: Reset search query (lokal dan store) karena filter praktik diaktifkan
+  // Reset search query saat filter praktik diaktifkan
   searchQuery.value = "";
-  store.searchQuery = ""; // Pastikan store juga di-reset
   if (searchTimeout) {
     clearTimeout(searchTimeout);
   }
 
-  // Panggil action dari Pinia Store
-  // Store akan menangani fetchPatients jika praktikId kosong
   await storeFilterPatientsByPraktik(praktikId);
 };
 
@@ -539,27 +527,27 @@ const submitEdit = async (id) => {
     editingId.value = null;
     alert("✅ Data pasien berhasil diperbarui!");
   } catch (err) {
+    console.error("Gagal update pasien:", err);
     alert(
       "❌ Gagal update pasien: " +
-        (err.response?.data?.message || err.message || err)
+        (err.response?.data?.message || "Terjadi kesalahan")
     );
   }
 };
 
-// toggle riwayat expand
+// Riwayat Toggle
 const toggleRiwayat = (id) => {
   if (expandedId.value === id) {
     expandedId.value = null;
-    formVisibleId.value = null;
   } else {
     expandedId.value = id;
-    formVisibleId.value = null;
-    resetMedisForm();
-    editingRecordId.value = null;
   }
+  formVisibleId.value = null;
+  resetMedisForm();
+  editingRecordId.value = null;
 };
 
-// toggle show/hide add-record form
+// Toggle Form Tambah Riwayat
 const toggleAddRecordForm = (id) => {
   if (formVisibleId.value === id) {
     formVisibleId.value = null;
@@ -591,15 +579,13 @@ const submitMedis = async (patientId) => {
     await addMedicalRecord({ pasien_id: patientId, ...medisForm.value });
     formVisibleId.value = null;
     resetMedisForm();
-    // fetchPatients() di sini tidak terlalu perlu jika addMedicalRecord di store sudah memanggil fetchPatients()
-    // Namun, kita tetap memanggilnya di sini untuk memastikan data terbaru terambil, meskipun agak redundan.
     await fetchPatients();
     alert("✅ Riwayat medis ditambahkan!");
   } catch (err) {
     console.error("Gagal tambah riwayat:", err);
     alert(
       "❌ Gagal tambah riwayat: " +
-        (err.response?.data?.message || err.message || err)
+        (err.response?.data?.message || "Terjadi kesalahan")
     );
   }
 };
@@ -621,13 +607,13 @@ const submitEditRecord = async (recordId) => {
   try {
     await updateMedicalRecord(recordId, editRecordForm.value);
     editingRecordId.value = null;
-    await fetchPatients(); // Muat ulang setelah update
+    await fetchPatients();
     alert("✅ Riwayat medis berhasil diperbarui!");
   } catch (err) {
     console.error("Gagal update riwayat:", err);
     alert(
       "❌ Gagal update riwayat: " +
-        (err.response?.data?.message || err.message || err)
+        (err.response?.data?.message || "Terjadi kesalahan")
     );
   }
 };
@@ -643,14 +629,13 @@ const handleDeleteRecord = async (recordId, patientId) => {
 
   try {
     await deleteMedicalRecord(recordId, patientId);
-    // Delete action di store sudah mengurus update state patients secara lokal,
-    // jadi fetchPatients() mungkin tidak diperlukan di sini
     await fetchPatients();
+    alert("✅ Riwayat medis berhasil dihapus!");
   } catch (err) {
     console.error("Gagal hapus riwayat:", err);
     alert(
       "❌ Gagal hapus riwayat: " +
-        (err.response?.data?.message || err.message || err)
+        (err.response?.data?.message || "Terjadi kesalahan")
     );
   }
 };
@@ -659,17 +644,18 @@ const handleDeleteRecord = async (recordId, patientId) => {
 const handleDeleteConfirmation = async (id, nama) => {
   if (
     confirm(
-      `[KONFIRMASI HAPUS] Hapus Pasien: ${nama} (ID: ${id})?\nAksi ini akan menghapus semua riwayat medis terkait!`
+      `[KONFIRMASI HAPUS] Hapus Pasien: ${nama} (ID: ${id})?\nAksi ini akan menghapus semua riwayat medis terkait dan tidak dapat dibatalkan!`
     )
   ) {
     try {
       await deletePatient(id);
       await fetchPatients();
+      alert(`✅ Pasien ${nama} berhasil dihapus.`);
     } catch (err) {
       console.error("Gagal hapus pasien:", err);
       alert(
         "❌ Gagal hapus pasien: " +
-          (err.response?.data?.message || err.message || err)
+          (err.response?.data?.message || "Terjadi kesalahan")
       );
     }
   }
