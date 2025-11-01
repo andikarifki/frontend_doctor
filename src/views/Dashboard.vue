@@ -64,7 +64,7 @@
           <th
             class="w-[20%] px-4 py-3 text-left text-xs font-medium uppercase tracking-wider"
           >
-            Tanggal Daftar
+            Tanggal Lahir
           </th>
           <th
             class="w-[12%] px-4 py-3 text-left text-xs font-medium uppercase tracking-wider"

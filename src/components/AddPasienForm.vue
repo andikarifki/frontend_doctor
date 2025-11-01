@@ -58,7 +58,7 @@
       <!-- Tanggal -->
       <div>
         <label for="tanggal" class="block text-sm font-medium text-gray-700"
-          >Tanggal</label
+          >Tanggal Lahir</label
         >
         <input
           type="date"

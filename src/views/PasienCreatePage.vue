@@ -24,6 +24,6 @@
 </template>
 
 <script setup>
-import AddPasienForm from "@/components/AddPasienForm.vue";
+import AddPasienForm from "../components/AddPasienForm.vue";
 // Tidak perlu Pinia di sini, semua logika ada di komponen formulir anak.
 </script>
