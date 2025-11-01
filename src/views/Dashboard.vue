@@ -105,59 +105,97 @@
                   ✏️ Edit Pasien ID {{ pasien.id }}
                 </h5>
 
-                <div class="grid grid-cols-1 md:grid-cols-5 gap-4">
-                  <input
-                    type="text"
-                    v-model="editForm.nama"
-                    required
-                    placeholder="Nama Pasien"
-                    class="block w-full border-gray-300 rounded-md shadow-sm p-2 text-sm"
-                  />
-                  <input
-                    type="date"
-                    v-model="editForm.tanggal"
-                    required
-                    class="block w-full border-gray-300 rounded-md shadow-sm p-2 text-sm"
-                  />
-                  <select
-                    v-model="editForm.status"
-                    class="block w-full border-gray-300 rounded-md shadow-sm p-2 text-sm"
-                  >
-                    <option value="Aktif">Aktif</option>
-                    <option value="Tidak Aktif">Tidak Aktif</option>
-                    <option value="Meninggal">Meninggal</option>
-                  </select>
-
-                  <select
-                    v-model="editForm.praktik_id"
-                    class="block w-full border-gray-300 rounded-md shadow-sm p-2 text-sm"
-                  >
-                    <option value="" disabled>-- Pilih Praktik --</option>
-                    <option
-                      v-for="praktik in praktikList"
-                      :key="praktik.id"
-                      :value="praktik.id"
+                <div class="grid grid-cols-2 md:grid-cols-6 gap-3 items-end">
+                  <!-- NIK FIELD ADDED HERE -->
+                  <div class="col-span-2 md:col-span-1">
+                    <label class="block text-xs font-medium text-gray-600 mb-1"
+                      >NIK (16 Digit)</label
                     >
-                      {{
-                        praktik.nama_praktik ||
-                        praktik.lokasi_praktik ||
-                        praktik.nama
-                      }}
-                    </option>
-                  </select>
+                    <input
+                      type="text"
+                      v-model="editForm.nik"
+                      required
+                      placeholder="NIK"
+                      minlength="16"
+                      maxlength="16"
+                      class="block w-full border-gray-300 rounded-md shadow-sm p-2 text-sm"
+                    />
+                  </div>
 
-                  <div class="flex space-x-2">
+                  <div class="col-span-2 md:col-span-1">
+                    <label class="block text-xs font-medium text-gray-600 mb-1"
+                      >Nama</label
+                    >
+                    <input
+                      type="text"
+                      v-model="editForm.nama"
+                      required
+                      placeholder="Nama Pasien"
+                      class="block w-full border-gray-300 rounded-md shadow-sm p-2 text-sm"
+                    />
+                  </div>
+
+                  <div class="col-span-1 md:col-span-1">
+                    <label class="block text-xs font-medium text-gray-600 mb-1"
+                      >Tgl Lahir</label
+                    >
+                    <input
+                      type="date"
+                      v-model="editForm.tanggal"
+                      required
+                      class="block w-full border-gray-300 rounded-md shadow-sm p-2 text-sm"
+                    />
+                  </div>
+
+                  <div class="col-span-1 md:col-span-1">
+                    <label class="block text-xs font-medium text-gray-600 mb-1"
+                      >Status</label
+                    >
+                    <select
+                      v-model="editForm.status"
+                      class="block w-full border-gray-300 rounded-md shadow-sm p-2 text-sm"
+                    >
+                      <option value="Aktif">Aktif</option>
+                      <option value="Tidak Aktif">Tidak Aktif</option>
+                      <option value="Meninggal">Meninggal</option>
+                    </select>
+                  </div>
+
+                  <div class="col-span-2 md:col-span-1">
+                    <label class="block text-xs font-medium text-gray-600 mb-1"
+                      >Lokasi Praktik</label
+                    >
+                    <select
+                      v-model="editForm.praktik_id"
+                      class="block w-full border-gray-300 rounded-md shadow-sm p-2 text-sm"
+                    >
+                      <option value="" disabled>-- Pilih Praktik --</option>
+                      <option
+                        v-for="praktik in praktikList"
+                        :key="praktik.id"
+                        :value="praktik.id"
+                      >
+                        {{
+                          praktik.nama_praktik ||
+                          praktik.lokasi_praktik ||
+                          praktik.nama
+                        }}
+                      </option>
+                    </select>
+                  </div>
+
+                  <div class="col-span-2 md:col-span-1 flex space-x-2 pt-4">
                     <button
                       type="submit"
                       :disabled="loading"
-                      class="bg-green-600 hover:bg-green-700 text-white font-bold py-1.5 px-3 rounded transition disabled:bg-gray-400 text-sm"
+                      class="bg-green-600 hover:bg-green-700 text-white font-bold py-1.5 px-3 rounded transition disabled:bg-gray-400 text-sm flex-1"
                     >
                       Simpan
                     </button>
                     <button
                       type="button"
                       @click="editingId = null"
-                      class="bg-gray-500 hover:bg-gray-600 text-white font-bold py-1.5 px-3 rounded transition text-sm"
+                      class="bg-gray-500 hover:bg-gray-600 text-white font-bold py-1.5 px-3 rounded transition text-sm flex-1"
                     >
                       Batal
                     </button>
@@ -472,8 +510,14 @@ const editingRecordId = ref(null);
 
 let searchTimeout = null;
 
-// Form Data
-const editForm = ref({ nama: "", tanggal: "", status: "", praktik_id: "" });
+// Form Data (NIK added here)
+const editForm = ref({
+  nik: "", // ⬅️ NIK DITAMBAHKAN
+  nama: "",
+  tanggal: "",
+  status: "",
+  praktik_id: "",
+});
 const medisForm = ref({
   tanggal_periksa: "",
   diagnosis: "",
@@ -524,6 +568,7 @@ const goToCreatePage = () => router.push({ name: "PasienCreate" });
 const handleEditPasien = (pasien) => {
   editingId.value = pasien.id;
   editForm.value = {
+    nik: pasien.nik, // ⬅️ NIK DITAMBAHKAN DI SINI
     nama: pasien.nama,
     tanggal: pasien.tanggal?.substring(0, 10) || "",
     status: pasien.status,
