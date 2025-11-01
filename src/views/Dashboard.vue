@@ -157,7 +157,6 @@
                     >
                       <option value="Aktif">Aktif</option>
                       <option value="Tidak Aktif">Tidak Aktif</option>
-                      <option value="Meninggal">Meninggal</option>
                     </select>
                   </div>
 

@@ -69,24 +69,6 @@
         />
       </div>
 
-      <!-- Status -->
-      <div>
-        <label for="status" class="block text-sm font-medium text-gray-700"
-          >Status</label
-        >
-        <select
-          id="status"
-          v-model="form.status"
-          required
-          class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-3 focus:ring-blue-500 focus:border-blue-500"
-        >
-          <option value="" disabled>-- Pilih Status --</option>
-          <option value="Aktif">Aktif</option>
-          <option value="Tidak Aktif">Tidak Aktif</option>
-          <option value="Meninggal">Meninggal</option>
-        </select>
-      </div>
-
       <!-- 🏥 Praktik -->
       <!-- TIDAK PERLU MD:COL-SPAN KARENA SUDAH 1 KOLOM -->
       <div>
@@ -135,7 +117,7 @@ const form = ref({
   nik: "",
   nama: "",
   tanggal: new Date().toISOString().substring(0, 10),
-  status: "",
+  status: "Aktif",
   praktik_id: "",
 });
 
@@ -163,7 +145,7 @@ const resetForm = () => {
     nik: "",
     nama: "",
     tanggal: new Date().toISOString().substring(0, 10),
-    status: "",
+    status: "Aktif",
     praktik_id: "",
   };
   validationErrors.value = [];
