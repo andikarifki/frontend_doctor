@@ -47,6 +47,11 @@
             No
           </th>
           <th
+            class="w-[20%] px-4 py-3 text-left text-xs font-medium uppercase tracking-wider"
+          >
+            NIK
+          </th>
+          <th
             class="w-[13%] px-4 py-3 text-left text-xs font-medium uppercase tracking-wider"
           >
             Nama
@@ -171,6 +176,11 @@
               {{ index + 1 }}
             </td>
 
+            <td
+              class="px-4 py-3 text-sm text-gray-600 overflow-hidden text-ellipsis"
+            >
+              {{ pasien.nik }}
+            </td>
             <td
               class="px-4 py-3 text-sm text-gray-600 overflow-hidden text-ellipsis"
             >

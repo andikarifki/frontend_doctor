@@ -21,7 +21,25 @@
       Data Pasien
     </h3>
 
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+    <!-- CONTAINER GRID DIUBAH MENJADI SATU KOLOM (GRID-COLS-1) DI SEMUA LAYAR -->
+    <div class="grid grid-cols-1 gap-4">
+      <!-- 💳 NIK (Nomor Induk Kependudukan) -->
+      <div>
+        <label for="nik" class="block text-sm font-medium text-gray-700"
+          >NIK (16 Digit)</label
+        >
+        <input
+          type="text"
+          id="nik"
+          v-model="form.nik"
+          required
+          placeholder="Masukkan 16 digit NIK"
+          minlength="16"
+          maxlength="16"
+          class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-3 focus:ring-blue-500 focus:border-blue-500"
+        />
+      </div>
+
       <!-- Nama -->
       <div>
         <label for="nama" class="block text-sm font-medium text-gray-700"
@@ -70,7 +88,8 @@
       </div>
 
       <!-- 🏥 Praktik -->
-      <div class="md:col-span-3">
+      <!-- TIDAK PERLU MD:COL-SPAN KARENA SUDAH 1 KOLOM -->
+      <div>
         <label for="praktik_id" class="block text-sm font-medium text-gray-700"
           >Pilih Lokasi Praktik</label
         >
@@ -113,6 +132,7 @@ const store = usePasienStore();
 
 // 🧾 Data Form
 const form = ref({
+  nik: "",
   nama: "",
   tanggal: new Date().toISOString().substring(0, 10),
   status: "",
@@ -140,6 +160,7 @@ const messageClass = computed(() => {
 // 🔄 Reset form
 const resetForm = () => {
   form.value = {
+    nik: "",
     nama: "",
     tanggal: new Date().toISOString().substring(0, 10),
     status: "",
