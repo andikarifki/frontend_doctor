@@ -152,7 +152,6 @@
               </form>
             </td>
           </tr>
-
           <tr
             v-if="editingId !== pasien.id"
             :class="{ 'bg-blue-50': expandedId === pasien.id }"
@@ -196,6 +195,12 @@
             <td
               class="px-4 py-3 text-sm flex justify-center items-center space-x-2 flex-nowrap"
             >
+              <button
+                @click="goToDetailPage(pasien.id)"
+                class="bg-blue-600 hover:bg-blue-700 text-white text-xs py-1 px-2 rounded transition whitespace-nowrap"
+              >
+                Detail
+              </button>
               <button
                 @click="toggleRiwayat(pasien.id)"
                 class="text-indigo-600 hover:text-indigo-900 text-xs py-1 px-2 border border-indigo-600 rounded transition whitespace-nowrap"
@@ -399,16 +404,12 @@
 import { ref, onMounted } from "vue";
 import axios from "axios";
 import { usePasienStore } from "@/stores/pasienStore";
-import { useRouter } from "vue-router";
+import { useRouter } from "vue-router"; // 👈 Import useRouter
 import { storeToRefs } from "pinia";
 // Hapus import usePraktikStore
 
 const store = usePasienStore();
-const router = useRouter();
-// Hapus semua deklarasi terkait praktikStore
-// const praktikStore = usePraktikStore();
-// const { praktikList } = storeToRefs(praktikStore);
-// const { fetchPraktikList } = praktikStore;
+const router = useRouter(); // 👈 Deklarasi useRouter
 
 const { patients, loading } = storeToRefs(store);
 const {
@@ -418,8 +419,6 @@ const {
   deleteMedicalRecord,
   deletePatient,
   fetchPatients,
-  // Hapus storeFilterPatientsByPraktik dari destructuring
-  // filterPatientsByPraktik: storeFilterPatientsByPraktik,
 } = store;
 
 const expandedId = ref(null);
@@ -429,19 +428,12 @@ const editingId = ref(null);
 const searchQuery = ref("");
 let searchTimeout = null;
 
-// Hapus state untuk filter praktik
-// const selectedPraktikId = ref("");
-
-// 🟢 MODIFIKASI NIK: NIK dipertahankan
 const editForm = ref({
   nik: "",
   nama: "",
   tanggal: "",
   status: "",
-  // Hapus praktik_id
-  // praktik_id: "",
 });
-// END MODIFIKASI NIK
 
 const medisForm = ref({
   tanggal_periksa: "",
@@ -460,13 +452,14 @@ const editRecordForm = ref({
 
 const goToCreatePage = () => router.push({ name: "PasienCreate" });
 
+// 🚨 FUNGSI BARU UNTUK NAVIGASI KE DETAIL
+const goToDetailPage = (id) => {
+  router.push({ name: "PraktikPasien", params: { id: id } });
+};
+// END FUNGSI BARU
+
 const searchPatients = async () => {
   const query = searchQuery.value.trim();
-
-  // Hapus logika reset filter praktik
-  // if (query) {
-  //   selectedPraktikId.value = "";
-  // }
 
   if (!query) {
     await fetchPatients();
@@ -505,25 +498,10 @@ const searchPatientsDebounced = () => {
   }, 300);
 };
 
-// Hapus fungsi filterPatientsByPraktik
-// const filterPatientsByPraktik = async () => {
-//   const praktikId = selectedPraktikId.value;
-
-//   searchQuery.value = "";
-//   if (searchTimeout) {
-//     clearTimeout(searchTimeout);
-//   }
-
-//   await storeFilterPatientsByPraktik(praktikId);
-// };
-
 onMounted(async () => {
   await fetchPatients();
-  // Hapus pemanggilan fetchPraktikList
-  // await fetchPraktikList();
 });
 
-// 🟢 MODIFIKASI NIK: NIK dipertahankan dan praktik_id dihapus
 const handleEditPasien = (pasien) => {
   editingId.value = pasien.id;
   editForm.value = {
@@ -531,15 +509,12 @@ const handleEditPasien = (pasien) => {
     nama: pasien.nama,
     tanggal: pasien.tanggal?.substring(0, 10) || "",
     status: pasien.status,
-    // Hapus praktik_id
-    // praktik_id: pasien.praktik_id || "",
   };
 };
-// END MODIFIKASI NIK
 
 const submitEdit = async (id) => {
   try {
-    // Pastikan praktik_id tidak ada dalam payload jika tidak diperlukan di backend
+    // Pastikan praktik_id tidak ada dalam payload
     const { praktik_id, ...payload } = editForm.value;
     await updatePatient(id, payload);
     editingId.value = null;
