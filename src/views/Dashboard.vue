@@ -13,29 +13,10 @@
       <input
         type="text"
         v-model="searchQuery"
-        @input="handleSearchInput"
+        @input="searchPatientsDebounced"
         placeholder="🔍 Cari nama pasien..."
         class="block border-gray-300 rounded-md shadow-sm p-2 text-sm border w-full md:w-1/3 max-w-md focus:ring-indigo-500 focus:border-indigo-500"
       />
-
-      <select
-        v-model="selectedPraktikId"
-        @change="filterPatientsByPraktik"
-        class="block border-gray-300 rounded-md shadow-sm p-2 text-sm border w-full md:w-auto"
-      >
-        <option value="">-- Tampilkan Semua Praktik --</option>
-        <option
-          v-for="praktik in praktikList"
-          :key="praktik.id"
-          :value="praktik.id"
-        >
-          {{
-            praktik.lokasi_praktik ||
-            praktik.nama_praktik ||
-            "Praktik #" + praktik.id
-          }}
-        </option>
-      </select>
     </section>
 
     <table class="min-w-full divide-y divide-gray-200 table-fixed">
@@ -52,27 +33,22 @@
             NIK
           </th>
           <th
-            class="w-[13%] px-4 py-3 text-left text-xs font-medium uppercase tracking-wider"
+            class="w-[20%] px-4 py-3 text-left text-xs font-medium uppercase tracking-wider"
           >
             Nama
           </th>
           <th
-            class="w-[20%] px-4 py-3 text-left text-xs font-medium uppercase tracking-wider"
-          >
-            Tempat Periksa
-          </th>
-          <th
-            class="w-[20%] px-4 py-3 text-left text-xs font-medium uppercase tracking-wider"
+            class="w-[15%] px-4 py-3 text-left text-xs font-medium uppercase tracking-wider"
           >
             Tanggal Lahir
           </th>
           <th
-            class="w-[12%] px-4 py-3 text-left text-xs font-medium uppercase tracking-wider"
+            class="w-[15%] px-4 py-3 text-left text-xs font-medium uppercase tracking-wider"
           >
             Status
           </th>
           <th
-            class="w-[30%] px-4 py-3 text-center text-xs font-medium uppercase tracking-wider"
+            class="w-[25%] px-4 py-3 text-center text-xs font-medium uppercase tracking-wider"
           >
             Riwayat & Aksi
           </th>
@@ -80,27 +56,23 @@
       </thead>
 
       <tbody class="bg-white divide-y divide-gray-200">
-        <tr v-if="loading && !filteredPatients.length">
-          <td colspan="7" class="px-4 py-4 text-center text-gray-500 italic">
+        <tr v-if="loading && !patients.length">
+          <td colspan="6" class="px-4 py-4 text-center text-gray-500 italic">
             Memuat data...
           </td>
         </tr>
-        <tr v-else-if="!filteredPatients.length && !loading">
-          <td colspan="7" class="px-4 py-4 text-center text-gray-500 italic">
-            {{
-              searchQuery || selectedPraktikId
-                ? "Data pasien tidak ditemukan dengan kriteria yang dipilih."
-                : "Belum ada data pasien."
-            }}
+        <tr v-else-if="!patients.length && !loading">
+          <td colspan="6" class="px-4 py-4 text-center text-gray-500 italic">
+            Belum ada data pasien.
           </td>
         </tr>
 
-        <template v-for="(pasien, index) in filteredPatients" :key="pasien.id">
+        <template v-for="(pasien, index) in patients" :key="pasien.id">
           <tr
             v-if="editingId === pasien.id"
             class="bg-yellow-100 transition duration-100"
           >
-            <td colspan="7" class="p-4 border-t-4 border-yellow-500">
+            <td colspan="6" class="p-4 border-t-4 border-yellow-500">
               <form
                 @submit.prevent="submitEdit(pasien.id)"
                 class="space-y-3 p-4 border border-orange-400 rounded-lg bg-orange-50 shadow-inner"
@@ -109,7 +81,7 @@
                   ✏️ Edit Pasien ID {{ pasien.id }}
                 </h5>
 
-                <div class="grid grid-cols-2 md:grid-cols-6 gap-3 items-end">
+                <div class="grid grid-cols-2 md:grid-cols-5 gap-3 items-end">
                   <div class="col-span-2 md:col-span-1">
                     <label class="block text-xs font-medium text-gray-600 mb-1"
                       >NIK (16 Digit)</label
@@ -118,13 +90,12 @@
                       type="text"
                       v-model="editForm.nik"
                       required
-                      placeholder="NIK"
+                      placeholder="NIK (16 digit)"
                       minlength="16"
                       maxlength="16"
                       class="block w-full border-gray-300 rounded-md shadow-sm p-2 text-sm"
                     />
                   </div>
-
                   <div class="col-span-2 md:col-span-1">
                     <label class="block text-xs font-medium text-gray-600 mb-1"
                       >Nama</label
@@ -137,10 +108,9 @@
                       class="block w-full border-gray-300 rounded-md shadow-sm p-2 text-sm"
                     />
                   </div>
-
                   <div class="col-span-1 md:col-span-1">
                     <label class="block text-xs font-medium text-gray-600 mb-1"
-                      >Tgl Lahir</label
+                      >Tgl. Lahir</label
                     >
                     <input
                       type="date"
@@ -149,7 +119,6 @@
                       class="block w-full border-gray-300 rounded-md shadow-sm p-2 text-sm"
                     />
                   </div>
-
                   <div class="col-span-1 md:col-span-1">
                     <label class="block text-xs font-medium text-gray-600 mb-1"
                       >Status</label
@@ -160,32 +129,9 @@
                     >
                       <option value="Aktif">Aktif</option>
                       <option value="Tidak Aktif">Tidak Aktif</option>
+                      <option value="Meninggal">Meninggal</option>
                     </select>
                   </div>
-
-                  <div class="col-span-2 md:col-span-1">
-                    <label class="block text-xs font-medium text-gray-600 mb-1"
-                      >Lokasi Praktik</label
-                    >
-                    <select
-                      v-model="editForm.praktik_id"
-                      class="block w-full border-gray-300 rounded-md shadow-sm p-2 text-sm"
-                    >
-                      <option value="" disabled>-- Pilih Praktik --</option>
-                      <option
-                        v-for="praktik in praktikList"
-                        :key="praktik.id"
-                        :value="praktik.id"
-                      >
-                        {{
-                          praktik.nama_praktik ||
-                          praktik.lokasi_praktik ||
-                          praktik.nama
-                        }}
-                      </option>
-                    </select>
-                  </div>
-
                   <div class="col-span-2 md:col-span-1 flex space-x-2 pt-4">
                     <button
                       type="submit"
@@ -217,9 +163,9 @@
             </td>
 
             <td
-              class="px-4 py-3 text-sm text-gray-600 overflow-hidden text-ellipsis"
+              class="px-4 py-3 text-sm text-gray-600 overflow-hidden text-ellipsis whitespace-nowrap font-mono"
             >
-              {{ pasien.nik }}
+              {{ pasien.nik || "-" }}
             </td>
             <td
               class="px-4 py-3 text-sm text-gray-600 overflow-hidden text-ellipsis"
@@ -227,18 +173,9 @@
               {{ pasien.nama }}
             </td>
             <td
-              class="px-4 py-3 text-sm text-gray-600 overflow-hidden text-ellipsis"
-            >
-              {{
-                pasien.praktiks[0]?.lokasi_praktik ||
-                pasien.praktiks[0]?.nama_praktik ||
-                "-"
-              }}
-            </td>
-            <td
               class="px-4 py-3 text-sm text-gray-600 whitespace-nowrap overflow-hidden text-ellipsis"
             >
-              {{ formatDateID(pasien.tanggal) }}
+              {{ pasien.tanggal ? pasien.tanggal.substring(0, 10) : "-" }}
             </td>
             <td
               class="px-4 py-3 whitespace-nowrap overflow-hidden text-ellipsis"
@@ -284,7 +221,7 @@
             v-if="expandedId === pasien.id"
             class="bg-gray-100 transition-all duration-300"
           >
-            <td colspan="7" class="p-4 border-t-4 border-yellow-500">
+            <td colspan="6" class="p-4 border-t-4 border-yellow-500">
               <div class="mb-4 flex justify-between items-center">
                 <h4 class="text-lg font-semibold text-gray-700">
                   Daftar Riwayat Medis
@@ -320,12 +257,19 @@
                     class="block w-full border-gray-300 rounded-md shadow-sm p-2 text-sm"
                   />
                 </div>
-                <div class="grid grid-cols-1 md:grid-cols-1 gap-4">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <input
                     type="text"
                     v-model="medisForm.obat"
                     required
                     placeholder="Obat"
+                    class="block w-full border-gray-300 rounded-md shadow-sm p-2 text-sm"
+                  />
+                  <input
+                    type="text"
+                    v-model="medisForm.lokasi_berobat"
+                    required
+                    placeholder="Lokasi Berobat"
                     class="block w-full border-gray-300 rounded-md shadow-sm p-2 text-sm"
                   />
                 </div>
@@ -362,9 +306,11 @@
                         <strong class="text-gray-700">Diagnosis:</strong>
                         {{ record.diagnosis }} |
                         <strong class="text-gray-700">Tgl:</strong>
-                        **{{ formatDateID(record.tanggal_periksa) }}** |
+                        {{ record.tanggal_periksa.substring(0, 10) }} |
                         <strong class="text-gray-700">Obat:</strong>
-                        {{ record.obat }}
+                        {{ record.obat }} |
+                        <strong class="text-gray-700">Tindakan:</strong>
+                        {{ record.lokasi_berobat }}
                       </div>
                       <div class="flex space-x-2 ml-4 flex-shrink-0">
                         <button
@@ -410,6 +356,13 @@
                         placeholder="Obat"
                         class="block w-full border-gray-300 rounded-md shadow-sm p-1.5 text-xs"
                       />
+                      <input
+                        type="text"
+                        v-model="editRecordForm.lokasi_berobat"
+                        required
+                        placeholder="Lokasi Berobat"
+                        class="block w-full border-gray-300 rounded-md shadow-sm p-1.5 text-xs"
+                      />
                       <div class="flex space-x-2 pt-1">
                         <button
                           type="submit"
@@ -443,23 +396,21 @@
 </template>
 
 <script setup>
-import { ref, onMounted, watch } from "vue";
+import { ref, onMounted } from "vue";
+import axios from "axios";
 import { usePasienStore } from "@/stores/pasienStore";
 import { useRouter } from "vue-router";
 import { storeToRefs } from "pinia";
-import { usePraktikStore } from "@/stores/praktikStore";
+// Hapus import usePraktikStore
 
 const store = usePasienStore();
 const router = useRouter();
-const praktikStore = usePraktikStore();
+// Hapus semua deklarasi terkait praktikStore
+// const praktikStore = usePraktikStore();
+// const { praktikList } = storeToRefs(praktikStore);
+// const { fetchPraktikList } = praktikStore;
 
-// --- Akses State, Getter, dan Actions Pinia ---
-const { praktikList } = storeToRefs(praktikStore);
-const { fetchPraktikList } = praktikStore;
-
-const { loading, searchQuery, selectedPraktikId, filteredPatients } =
-  storeToRefs(store);
-
+const { patients, loading } = storeToRefs(store);
 const {
   updatePatient,
   addMedicalRecord,
@@ -467,130 +418,149 @@ const {
   deleteMedicalRecord,
   deletePatient,
   fetchPatients,
-  filterPatientsByPraktik: storeFilterPatientsByPraktik,
-  searchPatients: storeSearchPatients,
+  // Hapus storeFilterPatientsByPraktik dari destructuring
+  // filterPatientsByPraktik: storeFilterPatientsByPraktik,
 } = store;
 
-// --- Fungsi Format Tanggal (DD/MM/YYYY) ---
-const formatDateID = (dateString) => {
-  if (!dateString) return "-";
-  try {
-    const date = new Date(dateString);
-    // Menggunakan id-ID untuk format Hari/Bulan/Tahun
-    return date.toLocaleDateString("id-ID", {
-      year: "numeric",
-      month: "2-digit",
-      day: "2-digit",
-    });
-  } catch (error) {
-    console.error("Gagal format tanggal:", error);
-    // Fallback jika formatting gagal
-    return dateString.substring(0, 10) || "-";
-  }
-};
-
-// --- State Lokal Komponen ---
 const expandedId = ref(null);
 const formVisibleId = ref(null);
 const editingId = ref(null);
-const editingRecordId = ref(null);
 
+const searchQuery = ref("");
 let searchTimeout = null;
 
-// Form Data (NIK added here)
+// Hapus state untuk filter praktik
+// const selectedPraktikId = ref("");
+
+// 🟢 MODIFIKASI NIK: NIK dipertahankan
 const editForm = ref({
-  nik: "", // ⬅️ NIK DITAMBAHKAN
+  nik: "",
   nama: "",
   tanggal: "",
   status: "",
-  praktik_id: "",
+  // Hapus praktik_id
+  // praktik_id: "",
 });
+// END MODIFIKASI NIK
+
 const medisForm = ref({
   tanggal_periksa: "",
   diagnosis: "",
   obat: "",
-  // LOKASI BEROBAT DIHAPUS
+  lokasi_berobat: "",
 });
+
+const editingRecordId = ref(null);
 const editRecordForm = ref({
   tanggal_periksa: "",
   diagnosis: "",
   obat: "",
-  // LOKASI BEROBAT DIHAPUS
+  lokasi_berobat: "",
 });
 
-// --- Lifecycle Hook ---
-onMounted(async () => {
-  await fetchPatients();
-  await fetchPraktikList();
-});
+const goToCreatePage = () => router.push({ name: "PasienCreate" });
 
-// --- Fungsi Pencarian dan Filter ---
+const searchPatients = async () => {
+  const query = searchQuery.value.trim();
 
-const handleSearchInput = () => {
+  // Hapus logika reset filter praktik
+  // if (query) {
+  //   selectedPraktikId.value = "";
+  // }
+
+  if (!query) {
+    await fetchPatients();
+    return;
+  }
+
+  try {
+    store.loading = true;
+    const url = `http://localhost:8000/api/pasien/search/${encodeURIComponent(
+      query
+    )}`;
+    const res = await axios.get(url);
+
+    store.patients = res.data.data || res.data;
+
+    store.loading = false;
+  } catch (err) {
+    console.error("Gagal mencari pasien berdasarkan nama:", err);
+    store.loading = false;
+    if (err.response?.status !== 404) {
+      alert(
+        "❌ Gagal memuat hasil pencarian: " +
+          (err.response?.data?.message || err)
+      );
+    }
+    store.patients = [];
+  }
+};
+
+const searchPatientsDebounced = () => {
   if (searchTimeout) {
     clearTimeout(searchTimeout);
   }
   searchTimeout = setTimeout(() => {
-    storeSearchPatients();
+    searchPatients();
   }, 300);
 };
 
-const filterPatientsByPraktik = async () => {
-  const praktikId = selectedPraktikId.value;
+// Hapus fungsi filterPatientsByPraktik
+// const filterPatientsByPraktik = async () => {
+//   const praktikId = selectedPraktikId.value;
 
-  searchQuery.value = "";
-  if (searchTimeout) {
-    clearTimeout(searchTimeout);
-  }
+//   searchQuery.value = "";
+//   if (searchTimeout) {
+//     clearTimeout(searchTimeout);
+//   }
 
-  await storeFilterPatientsByPraktik(praktikId);
-};
+//   await storeFilterPatientsByPraktik(praktikId);
+// };
 
-// --- Fungsi Navigasi dan CRUD Pasien & Riwayat Medis ---
+onMounted(async () => {
+  await fetchPatients();
+  // Hapus pemanggilan fetchPraktikList
+  // await fetchPraktikList();
+});
 
-const goToCreatePage = () => router.push({ name: "PasienCreate" });
-
-// EDIT PASIEN
+// 🟢 MODIFIKASI NIK: NIK dipertahankan dan praktik_id dihapus
 const handleEditPasien = (pasien) => {
   editingId.value = pasien.id;
   editForm.value = {
-    nik: pasien.nik, // ⬅️ NIK DITAMBAHKAN DI SINI
+    nik: pasien.nik || "",
     nama: pasien.nama,
     tanggal: pasien.tanggal?.substring(0, 10) || "",
     status: pasien.status,
-    // 🚨 PERUBAHAN DI SINI: Akses praktik_id pertama dari array praktiks
-    praktik_id: pasien.praktiks[0]?.id || "",
+    // Hapus praktik_id
+    // praktik_id: pasien.praktik_id || "",
   };
 };
+// END MODIFIKASI NIK
 
 const submitEdit = async (id) => {
   try {
-    await updatePatient(id, editForm.value);
+    // Pastikan praktik_id tidak ada dalam payload jika tidak diperlukan di backend
+    const { praktik_id, ...payload } = editForm.value;
+    await updatePatient(id, payload);
     editingId.value = null;
     alert("✅ Data pasien berhasil diperbarui!");
   } catch (err) {
-    console.error("Gagal update pasien:", err);
-    alert(
-      "❌ Gagal update pasien: " +
-        (err.response?.data?.message || "Terjadi kesalahan")
-    );
+    alert("❌ Gagal update pasien: " + (err.response?.data?.message || err));
   }
 };
 
-// Riwayat Toggle (Fungsi Lainnya Tidak Berubah karena medical_records tidak berubah)
 const toggleRiwayat = (id) => {
   if (expandedId.value === id) {
     expandedId.value = null;
+    formVisibleId.value = null;
   } else {
     expandedId.value = id;
+    formVisibleId.value = null;
+    resetMedisForm();
+    editingRecordId.value = null;
   }
-  formVisibleId.value = null;
-  resetMedisForm();
-  editingRecordId.value = null;
 };
 
-// ... (Fungsi toggleAddRecordForm, resetMedisForm, submitMedis, handleEditRecord,
-// submitEditRecord, handleDeleteRecord, handleDeleteConfirmation tetap sama)
 const toggleAddRecordForm = (id) => {
   if (formVisibleId.value === id) {
     formVisibleId.value = null;
@@ -607,7 +577,7 @@ const resetMedisForm = () => {
     tanggal_periksa: "",
     diagnosis: "",
     obat: "",
-    // LOKASI BEROBAT DIHAPUS
+    lokasi_berobat: "",
   };
 };
 
@@ -618,7 +588,6 @@ const submitMedis = async (patientId) => {
   }
 
   try {
-    // Pastikan hanya properti yang ada di medisForm yang dikirim
     await addMedicalRecord({ pasien_id: patientId, ...medisForm.value });
     formVisibleId.value = null;
     resetMedisForm();
@@ -628,7 +597,7 @@ const submitMedis = async (patientId) => {
     console.error("Gagal tambah riwayat:", err);
     alert(
       "❌ Gagal tambah riwayat: " +
-        (err.response?.data?.message || "Terjadi kesalahan")
+        (err.response?.data?.message || err.message || err)
     );
   }
 };
@@ -639,14 +608,13 @@ const handleEditRecord = (record) => {
     tanggal_periksa: record.tanggal_periksa?.substring(0, 10) || "",
     diagnosis: record.diagnosis || "",
     obat: record.obat || "",
-    // LOKASI BEROBAT DIHAPUS
+    lokasi_berobat: record.lokasi_berobat || "",
   };
   formVisibleId.value = null;
 };
 
 const submitEditRecord = async (recordId) => {
   try {
-    // Pastikan hanya properti yang ada di editRecordForm yang dikirim
     await updateMedicalRecord(recordId, editRecordForm.value);
     editingRecordId.value = null;
     await fetchPatients();
@@ -655,7 +623,7 @@ const submitEditRecord = async (recordId) => {
     console.error("Gagal update riwayat:", err);
     alert(
       "❌ Gagal update riwayat: " +
-        (err.response?.data?.message || "Terjadi kesalahan")
+        (err.response?.data?.message || err.message || err)
     );
   }
 };
@@ -671,33 +639,22 @@ const handleDeleteRecord = async (recordId, patientId) => {
   try {
     await deleteMedicalRecord(recordId, patientId);
     await fetchPatients();
-    alert("✅ Riwayat medis berhasil dihapus!");
   } catch (err) {
     console.error("Gagal hapus riwayat:", err);
     alert(
       "❌ Gagal hapus riwayat: " +
-        (err.response?.data?.message || "Terjadi kesalahan")
+        (err.response?.data?.message || err.message || err)
     );
   }
 };
 
-const handleDeleteConfirmation = async (id, nama) => {
+const handleDeleteConfirmation = (id, nama) => {
   if (
     confirm(
-      `[KONFIRMASI HAPUS] Hapus Pasien: ${nama} (ID: ${id})?\nAksi ini akan menghapus semua riwayat medis terkait dan tidak dapat dibatalkan!`
+      `[KONFIRMASI HAPUS] Hapus Pasien: ${nama} (ID: ${id})?\nAksi ini akan menghapus semua riwayat medis terkait!`
     )
   ) {
-    try {
-      await deletePatient(id);
-      await fetchPatients();
-      alert(`✅ Pasien ${nama} berhasil dihapus.`);
-    } catch (err) {
-      console.error("Gagal hapus pasien:", err);
-      alert(
-        "❌ Gagal hapus pasien: " +
-          (err.response?.data?.message || "Terjadi kesalahan")
-      );
-    }
+    deletePatient(id).then(() => fetchPatients());
   }
 };
 </script>
