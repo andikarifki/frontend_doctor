@@ -454,7 +454,7 @@ const goToCreatePage = () => router.push({ name: "PasienCreate" });
 
 // 🚨 FUNGSI BARU UNTUK NAVIGASI KE DETAIL
 const goToDetailPage = (id) => {
-  router.push({ name: "PraktikPasien", params: { id: id } });
+  router.push({ name: "DetailPasien", params: { id: id } });
 };
 // END FUNGSI BARU
 
