@@ -80,18 +80,22 @@
       </thead>
 
       <tbody class="bg-white divide-y divide-gray-200">
-        <tr v-if="loading && !patients.length">
+        <tr v-if="loading && !filteredPatients.length">
           <td colspan="7" class="px-4 py-4 text-center text-gray-500 italic">
             Memuat data...
           </td>
         </tr>
-        <tr v-else-if="!patients.length && !loading">
+        <tr v-else-if="!filteredPatients.length && !loading">
           <td colspan="7" class="px-4 py-4 text-center text-gray-500 italic">
-            Belum ada data pasien.
+            {{
+              searchQuery || selectedPraktikId
+                ? "Data pasien tidak ditemukan dengan kriteria yang dipilih."
+                : "Belum ada data pasien."
+            }}
           </td>
         </tr>
 
-        <template v-for="(pasien, index) in patients" :key="pasien.id">
+        <template v-for="(pasien, index) in filteredPatients" :key="pasien.id">
           <tr
             v-if="editingId === pasien.id"
             class="bg-yellow-100 transition duration-100"
@@ -106,7 +110,6 @@
                 </h5>
 
                 <div class="grid grid-cols-2 md:grid-cols-6 gap-3 items-end">
-                  <!-- NIK FIELD ADDED HERE -->
                   <div class="col-span-2 md:col-span-1">
                     <label class="block text-xs font-medium text-gray-600 mb-1"
                       >NIK (16 Digit)</label
@@ -227,8 +230,8 @@
               class="px-4 py-3 text-sm text-gray-600 overflow-hidden text-ellipsis"
             >
               {{
-                pasien.praktik?.lokasi_praktik ||
-                pasien.praktik?.nama_praktik ||
+                pasien.praktiks[0]?.lokasi_praktik ||
+                pasien.praktiks[0]?.nama_praktik ||
                 "-"
               }}
             </td>
@@ -317,19 +320,12 @@
                     class="block w-full border-gray-300 rounded-md shadow-sm p-2 text-sm"
                   />
                 </div>
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div class="grid grid-cols-1 md:grid-cols-1 gap-4">
                   <input
                     type="text"
                     v-model="medisForm.obat"
                     required
                     placeholder="Obat"
-                    class="block w-full border-gray-300 rounded-md shadow-sm p-2 text-sm"
-                  />
-                  <input
-                    type="text"
-                    v-model="medisForm.lokasi_berobat"
-                    required
-                    placeholder="Tindakan"
                     class="block w-full border-gray-300 rounded-md shadow-sm p-2 text-sm"
                   />
                 </div>
@@ -368,9 +364,7 @@
                         <strong class="text-gray-700">Tgl:</strong>
                         **{{ formatDateID(record.tanggal_periksa) }}** |
                         <strong class="text-gray-700">Obat:</strong>
-                        {{ record.obat }} |
-                        <strong class="text-gray-700">Tindakan:</strong>
-                        {{ record.lokasi_berobat }}
+                        {{ record.obat }}
                       </div>
                       <div class="flex space-x-2 ml-4 flex-shrink-0">
                         <button
@@ -416,13 +410,6 @@
                         placeholder="Obat"
                         class="block w-full border-gray-300 rounded-md shadow-sm p-1.5 text-xs"
                       />
-                      <input
-                        type="text"
-                        v-model="editRecordForm.lokasi_berobat"
-                        required
-                        placeholder="Tindakan"
-                        class="block w-full border-gray-300 rounded-md shadow-sm p-1.5 text-xs"
-                      />
                       <div class="flex space-x-2 pt-1">
                         <button
                           type="submit"
@@ -466,12 +453,13 @@ const store = usePasienStore();
 const router = useRouter();
 const praktikStore = usePraktikStore();
 
-// --- Akses State dan Actions Pinia ---
+// --- Akses State, Getter, dan Actions Pinia ---
 const { praktikList } = storeToRefs(praktikStore);
 const { fetchPraktikList } = praktikStore;
 
-const { patients, loading, searchQuery, selectedPraktikId } =
+const { loading, searchQuery, selectedPraktikId, filteredPatients } =
   storeToRefs(store);
+
 const {
   updatePatient,
   addMedicalRecord,
@@ -521,13 +509,13 @@ const medisForm = ref({
   tanggal_periksa: "",
   diagnosis: "",
   obat: "",
-  lokasi_berobat: "",
+  // LOKASI BEROBAT DIHAPUS
 });
 const editRecordForm = ref({
   tanggal_periksa: "",
   diagnosis: "",
   obat: "",
-  lokasi_berobat: "",
+  // LOKASI BEROBAT DIHAPUS
 });
 
 // --- Lifecycle Hook ---
@@ -550,7 +538,6 @@ const handleSearchInput = () => {
 const filterPatientsByPraktik = async () => {
   const praktikId = selectedPraktikId.value;
 
-  // Reset search query saat filter praktik diaktifkan
   searchQuery.value = "";
   if (searchTimeout) {
     clearTimeout(searchTimeout);
@@ -571,7 +558,8 @@ const handleEditPasien = (pasien) => {
     nama: pasien.nama,
     tanggal: pasien.tanggal?.substring(0, 10) || "",
     status: pasien.status,
-    praktik_id: pasien.praktik_id || "",
+    // 🚨 PERUBAHAN DI SINI: Akses praktik_id pertama dari array praktiks
+    praktik_id: pasien.praktiks[0]?.id || "",
   };
 };
 
@@ -589,7 +577,7 @@ const submitEdit = async (id) => {
   }
 };
 
-// Riwayat Toggle
+// Riwayat Toggle (Fungsi Lainnya Tidak Berubah karena medical_records tidak berubah)
 const toggleRiwayat = (id) => {
   if (expandedId.value === id) {
     expandedId.value = null;
@@ -601,7 +589,8 @@ const toggleRiwayat = (id) => {
   editingRecordId.value = null;
 };
 
-// Toggle Form Tambah Riwayat
+// ... (Fungsi toggleAddRecordForm, resetMedisForm, submitMedis, handleEditRecord,
+// submitEditRecord, handleDeleteRecord, handleDeleteConfirmation tetap sama)
 const toggleAddRecordForm = (id) => {
   if (formVisibleId.value === id) {
     formVisibleId.value = null;
@@ -618,11 +607,10 @@ const resetMedisForm = () => {
     tanggal_periksa: "",
     diagnosis: "",
     obat: "",
-    lokasi_berobat: "",
+    // LOKASI BEROBAT DIHAPUS
   };
 };
 
-// SUBMIT TAMBAH RIWAYAT
 const submitMedis = async (patientId) => {
   if (!medisForm.value.tanggal_periksa || !medisForm.value.diagnosis) {
     alert("Isi tanggal periksa dan diagnosis terlebih dahulu.");
@@ -630,6 +618,7 @@ const submitMedis = async (patientId) => {
   }
 
   try {
+    // Pastikan hanya properti yang ada di medisForm yang dikirim
     await addMedicalRecord({ pasien_id: patientId, ...medisForm.value });
     formVisibleId.value = null;
     resetMedisForm();
@@ -644,21 +633,20 @@ const submitMedis = async (patientId) => {
   }
 };
 
-// EDIT RIWAYAT
 const handleEditRecord = (record) => {
   editingRecordId.value = record.id;
   editRecordForm.value = {
     tanggal_periksa: record.tanggal_periksa?.substring(0, 10) || "",
     diagnosis: record.diagnosis || "",
     obat: record.obat || "",
-    lokasi_berobat: record.lokasi_berobat || "",
+    // LOKASI BEROBAT DIHAPUS
   };
   formVisibleId.value = null;
 };
 
-// SUBMIT EDIT RIWAYAT
 const submitEditRecord = async (recordId) => {
   try {
+    // Pastikan hanya properti yang ada di editRecordForm yang dikirim
     await updateMedicalRecord(recordId, editRecordForm.value);
     editingRecordId.value = null;
     await fetchPatients();
@@ -672,7 +660,6 @@ const submitEditRecord = async (recordId) => {
   }
 };
 
-// DELETE RIWAYAT
 const handleDeleteRecord = async (recordId, patientId) => {
   if (
     !confirm(
@@ -694,7 +681,6 @@ const handleDeleteRecord = async (recordId, patientId) => {
   }
 };
 
-// DELETE PASIEN
 const handleDeleteConfirmation = async (id, nama) => {
   if (
     confirm(
