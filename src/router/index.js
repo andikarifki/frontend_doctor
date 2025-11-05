@@ -4,6 +4,7 @@ import PasienCreatePage from "../views/PasienCreatePage.vue";
 import Praktik from "../views/Praktik.vue";
 import Dashboard from "../views/Dashboard.vue";
 import DetailPasien from "../views/DetailPasien.vue";
+import PasienPraktik from "../views/PasienPraktik.vue";
 
 const isAuthenticated = () => localStorage.getItem("authToken") !== null;
 
@@ -31,6 +32,12 @@ const routes = [
     name: "Praktik",
     component: Praktik,
     meta: { requiresAuth: true, documentTitle: "Daftar Praktik", fullLayout: false },
+  },
+  {
+    path: "/pasien-praktik",
+    name: "PasienPraktik",
+    component: PasienPraktik,
+    meta: { requiresAuth: true, documentTitle: "Daftar Pasien Berobat", fullLayout: false },
   },
    {
     path: "/pasien/:id",

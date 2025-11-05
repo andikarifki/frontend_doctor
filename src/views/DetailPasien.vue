@@ -56,7 +56,7 @@
             <thead>
               <tr>
                 <th>ID Praktik</th>
-                <th>Lokasi Praktik</th>
+                <th>Lokasi Periksa Pasien</th>
                 <th>Tanggal Pendaftaran</th>
               </tr>
             </thead>
