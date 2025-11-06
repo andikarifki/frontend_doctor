@@ -1,301 +1,200 @@
 <template>
-  <div class="praktik-container">
-    <div v-if="!isLoading && praktikData.length > 0">
-      <div
-        v-for="praktik in praktikData"
-        :key="praktik.id"
-        class="praktik-card"
+  <div class="praktik-pasien p-4 max-w-4xl mx-auto relative">
+    <!-- 🔹 Bagian kontrol atas -->
+    <div
+      class="controls mb-4 flex flex-col md:flex-row items-center gap-3 md:gap-4 justify-between"
+    >
+      <!-- Kiri: Tombol tambah -->
+      <button
+        @click="goToCreatePage"
+        class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded transition text-sm w-full md:w-auto"
       >
-        <div class="praktik-header">
-          <h3 class="praktik-name">🏥 {{ praktik.lokasi_praktik }}</h3>
-          <p class="praktik-date">
-            Tanggal Praktik: **{{ formatDate(praktik.tanggal_daftar) }}**
-          </p>
-        </div>
+        ➕ Tambah Pasien Baru
+      </button>
 
-        <h4 class="pasien-list-title">
-          👥 Daftar Pasien (Total: {{ praktik.pasiens.length }})
-        </h4>
-
-        <div v-if="praktik.pasiens.length > 0" class="table-wrapper">
-          <table class="pasien-table">
-            <thead>
-              <tr>
-                <th>No.</th>
-                <th>Nama</th>
-                <th>NIK</th>
-                <th>Tgl. Lahir</th>
-                <th>Status</th>
-                <th>Tgl. Daftar Pasien</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr v-for="(pasien, index) in praktik.pasiens" :key="pasien.id">
-                <td>{{ index + 1 }}</td>
-                <td>**{{ pasien.nama }}**</td>
-                <td>{{ pasien.nik }}</td>
-                <td>{{ formatDate(pasien.tanggal) }}</td>
-                <td>
-                  <span
-                    :class="['status-badge', pasien.status.toLowerCase()]"
-                    >{{ pasien.status }}</span
-                  >
-                </td>
-                <td>{{ formatDate(pasien.pivot.tanggal_daftar, true) }}</td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-        <p v-else class="no-pasien">
-          Tidak ada pasien terdaftar untuk lokasi praktik ini.
-        </p>
+      <!-- Tengah: Pilihan praktik -->
+      <div class="flex items-center gap-3 w-full md:w-auto">
+        <label for="praktik" class="whitespace-nowrap">Pilih Praktik:</label>
+        <select
+          id="praktik"
+          v-model="selectedPraktikId"
+          @change="fetchPasiens"
+          class="border rounded px-3 py-2 w-full md:w-auto"
+        >
+          <option value="">-- Pilih praktik --</option>
+          <option v-for="p in praktiks" :key="p.id" :value="p.id">
+            {{ p.nama || p.lokasi_praktik || "Praktik " + p.id }}
+          </option>
+        </select>
       </div>
     </div>
 
+    <!-- 🔸 Loading di tengah layar -->
     <div
-      v-if="!isLoading && praktikData.length === 0 && isSuccess"
-      class="message-box info"
+      v-if="loading"
+      class="absolute inset-0 flex items-center justify-center bg-white/60 backdrop-blur-sm z-10"
     >
-      Tidak ditemukan data praktik.
+      <div class="text-gray-700 font-medium italic animate-pulse">
+        ⏳ memuat…
+      </div>
+    </div>
+
+    <!-- 🔹 Pesan error -->
+    <div v-if="error" class="mb-4 text-red-600">{{ error }}</div>
+
+    <!-- 🔹 Info awal -->
+    <div v-if="!selectedPraktikId && !loading" class="text-gray-600">
+      Silakan pilih praktik untuk melihat daftar pasien.
+    </div>
+
+    <!-- 🔹 Tabel data pasien -->
+    <table
+      v-if="selectedPraktikId && pasiens.length && !loading"
+      class="min-w-full border-collapse shadow rounded overflow-hidden"
+    >
+      <thead class="bg-gray-100 text-left">
+        <tr>
+          <th class="px-3 py-2">ID</th>
+          <th class="px-3 py-2">NIK</th>
+          <th class="px-3 py-2">Nama</th>
+          <th class="px-3 py-2">Tanggal Lahir</th>
+          <th class="px-3 py-2">Status</th>
+          <th class="px-3 py-2">Tanggal Daftar</th>
+          <th class="px-3 py-2 text-center">Aksi</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr
+          v-for="pasien in pasiens"
+          :key="pasien.id"
+          class="odd:bg-white even:bg-gray-50"
+        >
+          <td class="px-3 py-2">{{ pasien.id }}</td>
+          <td class="px-3 py-2">{{ pasien.nik }}</td>
+          <td class="px-3 py-2">{{ pasien.nama }}</td>
+          <td class="px-3 py-2">{{ formatDate(pasien.tanggal) }}</td>
+          <td class="px-3 py-2">{{ pasien.status }}</td>
+          <td class="px-3 py-2">
+            {{ formatDate(pasien.pivot?.tanggal_daftar) || "-" }}
+          </td>
+          <td class="px-3 py-2 text-center">
+            <button
+              @click="hapusPasien(pasien.id)"
+              class="bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded text-sm"
+            >
+              🗑️ Hapus
+            </button>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+
+    <!-- 🔹 Pesan kosong -->
+    <div
+      v-else-if="selectedPraktikId && !loading && !pasiens.length"
+      class="text-gray-600"
+    >
+      Tidak ada pasien untuk praktik terpilih.
     </div>
   </div>
 </template>
 
 <script setup>
 import { ref, onMounted } from "vue";
+import axios from "axios";
+import { useRouter } from "vue-router";
 
-// --- State Reaktif ---
-const API_URL = "http://127.0.0.1:8000/api/praktik/semua";
+const router = useRouter();
+const BASE_API = import.meta.env.VITE_API_BASE || "http://127.0.0.1:8000/api";
+const praktiks = ref([]);
+const pasiens = ref([]);
+const selectedPraktikId = ref("");
+const loading = ref(false);
+const error = ref("");
 
-const isLoading = ref(true);
-const isSuccess = ref(false);
-const apiMessage = ref("");
-const praktikData = ref([]);
+const goToCreatePage = () => {
+  router.push({ name: "CreatePraktikPasien" });
+};
 
-// --- Fungsi Pengambilan Data (API Fetch) ---
-const fetchData = async () => {
-  isLoading.value = true;
-  apiMessage.value = "";
-  praktikData.value = [];
-
+async function fetchPraktiks() {
+  loading.value = true;
+  error.value = "";
   try {
-    const response = await fetch(API_URL);
-
-    // Penanganan respons HTTP yang tidak OK (misal: 404, 500)
-    if (!response.ok) {
-      throw new Error(`Gagal mengambil data: Status HTTP ${response.status}`);
-    }
-
-    const json = await response.json();
-
-    // Penanganan respons bisnis (sesuai field "success" di JSON)
-    isSuccess.value = json.success;
-    apiMessage.value =
-      json.message ||
-      (json.success
-        ? "Data berhasil dimuat."
-        : "Terjadi kesalahan saat memuat data.");
-
-    if (json.success && json.data) {
-      praktikData.value = json.data;
-    }
-  } catch (error) {
-    console.error("Fetch Error:", error);
-    isSuccess.value = false;
-    apiMessage.value = `Gagal terhubung ke API: ${error.message}`;
+    const res = await axios.get(`${BASE_API}/praktik/semua`);
+    praktiks.value = res.data?.data || res.data || [];
+  } catch (err) {
+    console.error(err);
+    error.value = "Gagal mengambil daftar praktik. Cek koneksi / endpoint.";
   } finally {
-    isLoading.value = false;
+    loading.value = false;
   }
-};
+}
 
-// --- Fungsi Pembantu (Formatter) ---
-/**
- * Fungsi untuk memformat tanggal.
- * @param {string} dateString - String tanggal dari JSON.
- * @param {boolean} isShort - Jika true, mengasumsikan format YYYY-MM-DD (dari pivot).
- * @returns {string} Tanggal yang diformat.
- */
-const formatDate = (dateString, isShort = false) => {
-  if (!dateString) return "-";
+async function fetchPasiens() {
+  if (!selectedPraktikId.value) {
+    pasiens.value = [];
+    return;
+  }
+  loading.value = true;
+  error.value = "";
+  try {
+    const res = await axios.get(
+      `${BASE_API}/praktik/${selectedPraktikId.value}/pasiens`
+    );
+    pasiens.value = res.data?.data || res.data || [];
+  } catch (err) {
+    console.error(err);
+    error.value = "Gagal mengambil daftar pasien. Pastikan API berjalan.";
+    pasiens.value = [];
+  } finally {
+    loading.value = false;
+  }
+}
+
+async function hapusPasien(pasienId) {
+  if (!selectedPraktikId.value) return;
+  if (!confirm("Yakin ingin menghapus pasien ini dari praktik?")) return;
 
   try {
-    const options = { year: "numeric", month: "short", day: "numeric" };
-
-    if (isShort) {
-      // Format YYYY-MM-DD
-      const [year, month, day] = dateString.split("-");
-      // Menggunakan new Date(year, monthIndex, day) untuk menghindari masalah zona waktu
-      const date = new Date(year, month - 1, day);
-      return date.toLocaleDateString("id-ID", options);
-    }
-
-    // Format ISO 8601 dengan waktu (misal: 2025-11-10T00:00:00.000000Z)
-    const date = new Date(dateString);
-    if (isNaN(date)) return dateString;
-
-    return date.toLocaleDateString("id-ID", options);
-  } catch (error) {
-    return dateString;
+    await axios.delete(
+      `${BASE_API}/praktik/${selectedPraktikId.value}/pasien/${pasienId}`
+    );
+    await fetchPasiens();
+  } catch (err) {
+    console.error(err);
+    alert("Gagal menghapus pasien dari praktik.");
   }
-};
+}
 
-// --- Lifecycle Hook ---
-onMounted(() => {
-  fetchData();
+function formatDate(d) {
+  if (!d) return "-";
+  try {
+    return new Date(d).toLocaleDateString("id-ID", {
+      year: "numeric",
+      month: "long",
+      day: "numeric",
+    });
+  } catch {
+    return d;
+  }
+}
+
+onMounted(async () => {
+  await fetchPraktiks();
 });
 </script>
 
 <style scoped>
-/* --- Styling (CSS) untuk Tampilan yang Baik --- */
-.praktik-container {
-  font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
-  padding: 20px;
-  max-width: 1200px;
-  margin: 0 auto;
+.praktik-pasien {
+  font-family: Inter, system-ui, -apple-system, "Segoe UI", Roboto,
+    "Helvetica Neue", Arial;
 }
-
-.title {
-  text-align: center;
-  color: #2c3e50;
-  margin-bottom: 30px;
-  border-bottom: 2px solid #3498db;
-  padding-bottom: 10px;
-}
-
-/* Kotak Pesan */
-.message-box {
-  padding: 15px;
-  margin-bottom: 20px;
-  border-radius: 8px;
-  font-weight: 600;
-}
-
-.loading {
-  background-color: #f9f9e6;
-  color: #8b8000;
-  border: 1px solid #8b8000;
-  text-align: center;
-}
-
-.success {
-  background-color: #e6ffe6;
-  color: #008000;
-  border: 1px solid #008000;
-}
-
-.error {
-  background-color: #ffe6e6;
-  color: #ff0000;
-  border: 1px solid #ff0000;
-}
-
-.info {
-  background-color: #e6f7ff;
-  color: #0056b3;
-  border: 1px solid #0056b3;
-  text-align: center;
-}
-
-/* Kartu Praktik */
-.praktik-card {
-  border: 1px solid #ddd;
-  border-radius: 10px;
-  margin-bottom: 25px;
-  padding: 20px;
-  background-color: #fdfdfd;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
-}
-
-.praktik-header {
-  border-bottom: 2px solid #3498db;
-  padding-bottom: 10px;
-  margin-bottom: 15px;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-
-.praktik-name {
-  color: #34495e;
-  margin: 0;
-}
-
-.praktik-date {
-  font-size: 0.9em;
-  color: #7f8c8d;
-}
-
-.pasien-list-title {
-  color: #2c3e50;
-  margin-top: 20px;
-  margin-bottom: 10px;
-}
-
-/* Tabel Pasien */
-.table-wrapper {
-  overflow-x: auto;
-}
-
-.pasien-table {
+table {
+  border: 1px solid #e5e7eb;
   width: 100%;
-  border-collapse: collapse;
-  margin-top: 10px;
 }
-
-.pasien-table th,
-.pasien-table td {
-  border: 1px solid #ecf0f1;
-  padding: 12px;
-  text-align: left;
+th,
+td {
+  border-bottom: 1px solid #eef2f7;
 }
-
-.pasien-table th {
-  background-color: #3498db;
-  color: white;
-  font-weight: 600;
-  text-transform: uppercase;
-  font-size: 0.85em;
-}
-
-.pasien-table tr:nth-child(even) {
-  background-color: #f9f9f9;
-}
-
-.pasien-table tr:hover {
-  background-color: #f1f7fc;
-}
-
-.no-pasien {
-  text-align: center;
-  color: #e74c3c;
-  padding: 15px;
-  background-color: #fdeaea;
-  border-radius: 5px;
-}
-
-/* Badge Status */
-.status-badge {
-  display: inline-block;
-  padding: 4px 8px;
-  border-radius: 12px;
-  font-size: 0.8em;
-  font-weight: bold;
-  text-transform: capitalize;
-}
-
-.status-badge.aktif {
-  background-color: #2ecc71;
-  color: white;
-}
-/* Tambahkan status lain jika ada (misalnya: selesai, batal) */
-/*
-.status-badge.selesai {
-  background-color: #f39c12;
-  color: white;
-}
-.status-badge.batal {
-  background-color: #e74c3c;
-  color: white;
-}
-*/
 </style>

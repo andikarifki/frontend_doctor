@@ -5,6 +5,7 @@ import Praktik from "../views/Praktik.vue";
 import Dashboard from "../views/Dashboard.vue";
 import DetailPasien from "../views/DetailPasien.vue";
 import PasienPraktik from "../views/PasienPraktik.vue";
+import CreatePraktikPasien from "../views/CreatePraktikPasien.vue";
 
 const isAuthenticated = () => localStorage.getItem("authToken") !== null;
 
@@ -40,10 +41,10 @@ const routes = [
     meta: { requiresAuth: true, documentTitle: "Daftar Pasien Berobat", fullLayout: false },
   },
    {
-    path: "/pasien/:id",
-    name: "DetailPasien",
-    component: DetailPasien,
-    meta: { requiresAuth: true, documentTitle: "Daftar Praktik Pasien ", fullLayout: false },
+    path: "/pasien-praktik/tambah",
+    name: "CreatePraktikPasien",
+    component: CreatePraktikPasien,
+    meta: { requiresAuth: true, documentTitle: "Tambah Pasien Berobat ", fullLayout: false },
   },
 ];
 
