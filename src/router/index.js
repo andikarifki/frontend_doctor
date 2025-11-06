@@ -28,6 +28,12 @@ const routes = [
     component: PasienCreatePage,
     meta: { requiresAuth: true, tdocumentTitle: "Daftar Pasien", fullLayout: false },
   },
+    {
+    path: "/pasien/detail-pasien/:id",
+    name: "DetailPasien",
+    component: DetailPasien,
+    meta: { requiresAuth: true, documentTitle: "Detail Pasien", fullLayout: false },
+  },
   {
     path: "/praktik",
     name: "Praktik",
