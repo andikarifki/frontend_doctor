@@ -6,6 +6,7 @@ import Dashboard from "../views/Dashboard.vue";
 import DetailPasien from "../views/DetailPasien.vue";
 import PasienPraktik from "../views/PasienPraktik.vue";
 import CreatePraktikPasien from "../views/CreatePraktikPasien.vue";
+import MedicalRecord from "../views/MedicalRecord.vue";
 
 const isAuthenticated = () => localStorage.getItem("authToken") !== null;
 
@@ -51,6 +52,12 @@ const routes = [
     name: "CreatePraktikPasien",
     component: CreatePraktikPasien,
     meta: { requiresAuth: true, documentTitle: "Tambah Pasien Berobat ", fullLayout: false },
+  },
+  {
+    path: "/medical-record",
+    name: "MedicalRecord",
+    component: MedicalRecord,
+    meta: { requiresAuth: true, documentTitle: "Daftar Rekam Medis Pasien", fullLayout: false },
   },
 ];
 
