@@ -68,31 +68,7 @@
           class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-3 focus:ring-blue-500 focus:border-blue-500"
         />
       </div>
-
-      <!-- 🏥 Praktik -->
-      <!-- TIDAK PERLU MD:COL-SPAN KARENA SUDAH 1 KOLOM -->
-      <div>
-        <label for="praktik_id" class="block text-sm font-medium text-gray-700"
-          >Pilih Lokasi Praktik</label
-        >
-        <select
-          id="praktik_id"
-          v-model="form.praktik_id"
-          required
-          class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-3 focus:ring-blue-500 focus:border-blue-500"
-        >
-          <option value="" disabled>-- Pilih Praktik --</option>
-          <option
-            v-for="praktik in praktikList"
-            :key="praktik.id"
-            :value="praktik.id"
-          >
-            {{ praktik.lokasi_praktik }}
-          </option>
-        </select>
-      </div>
     </div>
-
     <div class="pt-4 border-t">
       <button
         type="submit"
@@ -118,7 +94,6 @@ const form = ref({
   nama: "",
   tanggal: new Date().toISOString().substring(0, 10),
   status: "Aktif",
-  praktik_id: "",
 });
 
 // 🏥 Daftar praktik
@@ -174,18 +149,4 @@ const handleSubmit = async () => {
     }
   }
 };
-
-// 🔁 Ambil data praktik dari API Laravel
-const fetchPraktikList = async () => {
-  try {
-    const response = await api.get("pendaftaran-praktik");
-    praktikList.value = response.data?.data || response.data || [];
-  } catch (error) {
-    console.error("Gagal mengambil daftar praktik:", error);
-    praktikList.value = [];
-  }
-};
-
-// 📦 Load daftar praktik saat komponen di-mount
-onMounted(fetchPraktikList);
 </script>
