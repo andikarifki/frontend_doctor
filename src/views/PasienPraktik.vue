@@ -9,7 +9,7 @@
         @click="goToCreatePage"
         class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded transition text-sm w-full md:w-auto"
       >
-        ➕ Tambah Pasien Baru
+        ➕ Tambah Daftar Berobat Pasien
       </button>
 
       <!-- Tengah: Pilihan praktik -->
@@ -59,7 +59,7 @@
           <th class="px-3 py-2">Nama</th>
           <th class="px-3 py-2">Tanggal Lahir</th>
           <th class="px-3 py-2">Status</th>
-          <th class="px-3 py-2">Tanggal Daftar</th>
+          <th class="px-3 py-2">Tanggal Kontrol</th>
           <th class="px-3 py-2 text-center">Aksi</th>
         </tr>
       </thead>

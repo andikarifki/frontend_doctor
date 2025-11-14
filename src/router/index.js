@@ -51,7 +51,7 @@ const routes = [
     path: "/pasien-praktik/tambah",
     name: "CreatePraktikPasien",
     component: CreatePraktikPasien,
-    meta: { requiresAuth: true, documentTitle: "Tambah Pasien Berobat ", fullLayout: false },
+    meta: { requiresAuth: true, documentTitle: "Cari Nama Pasien", fullLayout: false },
   },
   {
     path: "/medical-record",

@@ -1,11 +1,9 @@
 <template>
   <div class="max-w-md mx-auto bg-white p-6 rounded-xl shadow-md mt-10">
-    <h2 class="text-xl font-bold mb-4">🩺 Tambah Praktik untuk Pasien</h2>
-
     <form @submit.prevent="tambahPraktik">
       <!-- Pilih Pasien -->
       <div class="mb-4">
-        <label class="block font-semibold mb-1">Pasien</label>
+        <label class="block font-semibold mb-1">Cari Nama   Pasien</label>
         <select
           v-model="form.pasien_id"
           class="w-full border border-gray-300 rounded-md p-2"
@@ -24,15 +22,15 @@
 
       <!-- Pilih Lokasi Praktik -->
       <div class="mb-4">
-        <label class="block font-semibold mb-1">Lokasi Praktik</label>
+        <label class="block font-semibold mb-1">Lokasi Berobat</label>
         <select
           v-model="form.praktik_id"
           class="w-full border border-gray-300 rounded-md p-2"
           required
         >
-          <option value="" disabled>Pilih lokasi praktik</option>
+          <option value="" disabled>Pilih lokasi Berobat</option>
           <option v-for="item in daftarPraktik" :key="item.id" :value="item.id">
-            {{ item.lokasi_praktik }} - {{ item.tanggal_daftar }}
+            {{ item.lokasi_praktik }}
           </option>
         </select>
       </div>

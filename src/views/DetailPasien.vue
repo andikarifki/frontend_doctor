@@ -58,7 +58,7 @@
       <!-- DAFTAR PRAKTIK -->
       <section>
         <h3 class="text-xl font-semibold mb-3 text-gray-800 border-b pb-2">
-          🏥 Daftar Praktik
+          🏥 Tempat Periksa
         </h3>
 
         <div v-if="pasien.praktiks && pasien.praktiks.length > 0">
@@ -67,9 +67,8 @@
           >
             <thead class="bg-blue-100">
               <tr>
-                <th class="px-4 py-2 text-left">ID Praktik</th>
                 <th class="px-4 py-2 text-left">Lokasi</th>
-                <th class="px-4 py-2 text-left">Tanggal Pendaftaran</th>
+                <th class="px-4 py-2 text-left">Tanggal Daftar Kontrol</th>
               </tr>
             </thead>
             <tbody>
@@ -78,7 +77,6 @@
                 :key="praktik.id"
                 class="hover:bg-gray-50"
               >
-                <td class="px-4 py-2">{{ praktik.id }}</td>
                 <td class="px-4 py-2">{{ praktik.lokasi_praktik }}</td>
                 <td class="px-4 py-2">
                   {{ formatDate(praktik.pivot?.tanggal_daftar) }}
@@ -104,8 +102,8 @@
           >
             <thead class="bg-green-100">
               <tr>
-                <th class="px-4 py-2 text-left">Tanggal Periksa</th>
-                <th class="px-4 py-2 text-left">Praktik</th>
+                <th class="px-4 py-2 text-left">Tanggal Kontrol</th>
+                <th class="px-4 py-2 text-left">Tempat Berobat Pasien</th>
                 <th class="px-4 py-2 text-left">Diagnosis</th>
                 <th class="px-4 py-2 text-left">Obat</th>
               </tr>

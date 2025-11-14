@@ -31,7 +31,6 @@
     <!-- Form Tambah Rekam Medis -->
     <div v-if="showForm" class="p-4 mb-6 border rounded bg-gray-50">
       <h3 class="text-lg font-medium mb-2">Form Riwayat Medis</h3>
-
       <form @submit.prevent="tambahRecord" class="space-y-3">
         <div>
           <label class="block mb-1">Tanggal Periksa</label>
@@ -42,7 +41,6 @@
             class="border p-2 rounded w-full"
           />
         </div>
-
         <div>
           <label class="block mb-1">Diagnosis</label>
           <input
@@ -52,7 +50,6 @@
             class="border p-2 rounded w-full"
           />
         </div>
-
         <div>
           <label class="block mb-1">Obat</label>
           <input
@@ -62,7 +59,6 @@
             class="border p-2 rounded w-full"
           />
         </div>
-
         <div>
           <label class="block mb-1">Praktik</label>
           <select
@@ -76,7 +72,6 @@
             </option>
           </select>
         </div>
-
         <div class="flex space-x-2">
           <button
             type="submit"
@@ -112,6 +107,7 @@
             <th class="p-2 border">Diagnosis</th>
             <th class="p-2 border">Obat</th>
             <th class="p-2 border">Lokasi</th>
+            <th class="p-2 border">Aksi</th>
           </tr>
         </thead>
         <tbody>
@@ -126,6 +122,14 @@
             <td class="p-2 border">{{ record.diagnosis }}</td>
             <td class="p-2 border">{{ record.obat }}</td>
             <td class="p-2 border">{{ record.lokasi_berobat || "-" }}</td>
+            <td class="p-2 border text-center">
+              <button
+                @click="hapusRecord(record.id)"
+                class="bg-red-600 text-white px-3 py-1 rounded hover:bg-red-700"
+              >
+                Hapus
+              </button>
+            </td>
           </tr>
         </tbody>
       </table>
@@ -171,9 +175,7 @@ const fetchPasiens = async () => {
 const fetchDaftarPraktik = async () => {
   try {
     const res = await axios.get(`${API_BASE}/pendaftaran-praktik`);
-    // Pastikan selalu array
     daftarPraktik.value = res.data.data || [];
-    console.log("Praktik:", daftarPraktik.value);
   } catch (err) {
     console.error("Gagal memuat praktik:", err);
   }
@@ -218,6 +220,19 @@ const tambahRecord = async () => {
   } catch (err) {
     console.error(err);
     alert("Gagal menambahkan riwayat medis.");
+  }
+};
+
+// Hapus rekam medis
+const hapusRecord = async (id) => {
+  if (!confirm("Apakah yakin ingin menghapus rekam medis ini?")) return;
+  try {
+    await axios.delete(`${API_BASE}/medical-records/${id}`);
+    alert("Rekam medis berhasil dihapus!");
+    fetchMedicalRecords();
+  } catch (err) {
+    console.error(err);
+    alert("Gagal menghapus rekam medis.");
   }
 };
 
