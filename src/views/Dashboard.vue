@@ -179,21 +179,85 @@
             >
               <button
                 @click="goToDetailPage(pasien.id)"
-                class="bg-blue-600 hover:bg-blue-700 text-white text-xs py-1 px-2 rounded transition"
+                class="bg-blue-600 hover:bg-blue-700 text-white py-1 px-2 rounded transition flex items-center justify-center"
               >
-                Detail
+                <!-- Eye Icon -->
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  class="w-4 h-4"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
+                  />
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M2.458 12C3.732 7.943 7.523 5 12 5c4.477 0 8.268 2.943 9.542 7-1.274 4.057-5.065 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"
+                  />
+                </svg>
               </button>
               <button
                 @click="handleEditPasien(pasien)"
-                class="bg-yellow-500 hover:bg-yellow-600 text-gray-800 text-xs py-1 px-2 rounded transition"
+                class="bg-yellow-500 hover:bg-yellow-600 text-gray-800 py-1 px-2 rounded transition flex items-center justify-center"
               >
-                Edit
+                <!-- Pencil / Edit Icon -->
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  class="w-4 h-4"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M15.232 5.232l3.536 3.536M9 11l6.232-6.232a2 2 0 112.828 2.828L11.828 13.828a2 2 0 01-1.414.586H7v-3z"
+                  />
+                </svg>
               </button>
               <button
                 @click="handleDeleteConfirmation(pasien.id, pasien.nama)"
-                class="bg-red-600 hover:bg-red-700 text-white text-xs py-1 px-2 rounded transition"
+                class="bg-red-600 hover:bg-red-700 text-white py-1 px-2 rounded transition flex items-center justify-center"
               >
-                Hapus
+                <!-- Trash Icon (Bigger) -->
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  class="w-5 h-5"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6M9 7h6m-7 0l1-3h4l1 3"
+                  />
+                </svg>
+              </button>
+              <button
+                @click="handleWhatsapp(pasien.no_tlp)"
+                class="bg-green-500 hover:bg-green-600 text-white py-1 px-2 rounded transition flex items-center justify-center"
+              >
+                <!-- WhatsApp Icon -->
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  class="w-5 h-5"
+                  viewBox="0 0 32 32"
+                >
+                  <path
+                    fill="currentColor"
+                    d="M16.002 3.2c-7.05 0-12.8 5.682-12.8 12.67c0 2.23.586 4.41 1.7 6.33L3.2 28.8l6.75-1.767a12.83 12.83 0 006.05 1.537h.003c7.05 0 12.8-5.682 12.8-12.67c0-3.39-1.323-6.576-3.726-8.963C22.675 4.512 19.44 3.2 16.002 3.2zm7.48 18.58c-.31.87-1.78 1.64-2.47 1.75c-.63.1-1.43.14-2.31-.14c-.53-.17-1.21-.39-2.08-.76c-3.66-1.59-6.04-5.28-6.22-5.53c-.18-.25-1.48-1.97-1.48-3.75c0-1.78.94-2.66 1.28-3.02c.34-.36.75-.45 1-.45h.72c.23 0 .54-.08.84.64c.31.77 1.05 2.66 1.14 2.85c.09.19.15.41.03.66c-.12.25-.18.41-.34.63c-.17.2-.36.45-.52.61c-.17.17-.34.36-.15.7c.18.34.81 1.33 1.74 2.16c1.19 1.06 2.17 1.39 2.51 1.55c.34.17.54.14.74-.08c.2-.22.86-1 1.09-1.34c.23-.34.46-.28.78-.17c.33.11 2.09.98 2.45 1.16c.36.17.6.25.69.39c.09.14.09.89-.22 1.76z"
+                  />
+                </svg>
               </button>
             </td>
           </tr>
@@ -285,5 +349,21 @@ const handleDeleteConfirmation = (id, nama) => {
   if (confirm(`[KONFIRMASI HAPUS] Hapus Pasien: ${nama} (ID: ${id})?`)) {
     deletePatient(id).then(() => fetchPatients());
   }
+};
+
+const handleWhatsapp = (number) => {
+  if (!number) {
+    alert("Nomor WhatsApp tidak tersedia.");
+    return;
+  }
+
+  // Ubah 08xxx → 628xxx
+  const phone = number.replace(/^0/, "62");
+
+  const text = encodeURIComponent(
+    "Halo, saya dari klinik. Ada yang perlu dikonfirmasi."
+  );
+
+  window.open(`https://wa.me/${phone}?text=${text}`, "_blank");
 };
 </script>

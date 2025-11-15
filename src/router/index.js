@@ -7,6 +7,8 @@ import DetailPasien from "../views/DetailPasien.vue";
 import PasienPraktik from "../views/PasienPraktik.vue";
 import CreatePraktikPasien from "../views/CreatePraktikPasien.vue";
 import MedicalRecord from "../views/MedicalRecord.vue";
+import Medicine from "../views/Medicine.vue";
+import RequestDrug from "../views/RequestDrug.vue";
 
 const isAuthenticated = () => localStorage.getItem("authToken") !== null;
 
@@ -58,6 +60,18 @@ const routes = [
     name: "MedicalRecord",
     component: MedicalRecord,
     meta: { requiresAuth: true, documentTitle: "Daftar Rekam Medis Pasien", fullLayout: false },
+  },
+  {
+    path: "/medicine",
+    name: "Medicine",
+    component: Medicine,
+    meta: { requiresAuth: true, documentTitle: "Menu Obat", fullLayout: false },
+  },
+  {
+    path: "/request-drug",
+    name: "RequestDrug",
+    component: RequestDrug,
+    meta: { requiresAuth: true, documentTitle: "Menu Request Obat", fullLayout: false },
   },
 ];
 

@@ -27,6 +27,7 @@
       </div>
 
       <!-- Menu -->
+      <!-- Menu -->
       <nav>
         <h2
           class="text-sm font-semibold text-blue-300 mb-3 uppercase tracking-wider"
@@ -38,9 +39,10 @@
           <li>
             <router-link
               to="/"
-              class="flex items-center p-3 rounded-lg transition duration-150 ease-in-out font-medium text-blue-100 hover:bg-blue-700"
+              class="flex items-center p-3 rounded-lg font-medium text-blue-100 hover:bg-blue-700"
               active-class="bg-blue-600 shadow-md"
             >
+              <!-- Home -->
               <svg
                 xmlns="http://www.w3.org/2000/svg"
                 class="w-5 h-5 mr-3"
@@ -52,7 +54,7 @@
                   stroke-linecap="round"
                   stroke-linejoin="round"
                   stroke-width="2"
-                  d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3"
+                  d="M3 12l9-9 9 9M4 10v10a1 1 0 001 1h4m6 0h4a1 1 0 001-1V10"
                 />
               </svg>
               Halaman Utama
@@ -63,9 +65,10 @@
           <li>
             <router-link
               to="/praktik"
-              class="flex items-center p-3 rounded-lg transition duration-150 ease-in-out font-medium text-blue-100 hover:bg-blue-700"
+              class="flex items-center p-3 rounded-lg font-medium text-blue-100 hover:bg-blue-700"
               active-class="bg-blue-600 shadow-md"
             >
+              <!-- Stethoscope -->
               <svg
                 xmlns="http://www.w3.org/2000/svg"
                 class="w-5 h-5 mr-3"
@@ -74,10 +77,10 @@
                 stroke="currentColor"
               >
                 <path
+                  stroke-width="2"
                   stroke-linecap="round"
                   stroke-linejoin="round"
-                  stroke-width="2"
-                  d="M12 6v6l4 2m6-2a9 9 0 11-18 0 9 9 0 0118 0z"
+                  d="M6 3v6a6 6 0 0012 0V3m-6 14v4m-4 0h8"
                 />
               </svg>
               Daftar Praktik
@@ -88,9 +91,10 @@
           <li>
             <router-link
               to="/pasien-praktik"
-              class="flex items-center p-3 rounded-lg transition duration-150 ease-in-out font-medium text-blue-100 hover:bg-blue-700"
+              class="flex items-center p-3 rounded-lg font-medium text-blue-100 hover:bg-blue-700"
               active-class="bg-blue-600 shadow-md"
             >
+              <!-- Users -->
               <svg
                 xmlns="http://www.w3.org/2000/svg"
                 class="w-5 h-5 mr-3"
@@ -99,10 +103,10 @@
                 stroke="currentColor"
               >
                 <path
+                  stroke-width="2"
                   stroke-linecap="round"
                   stroke-linejoin="round"
-                  stroke-width="2"
-                  d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
+                  d="M17 20v-2a4 4 0 00-3-3.87M9 14.13A4 4 0 006 18v2m6-10a4 4 0 100-8 4 4 0 000 8z"
                 />
               </svg>
               Daftar Pasien Berobat
@@ -113,9 +117,10 @@
           <li>
             <router-link
               to="/medical-record"
-              class="flex items-center p-3 rounded-lg transition duration-150 ease-in-out font-medium text-blue-100 hover:bg-blue-700"
+              class="flex items-center p-3 rounded-lg font-medium text-blue-100 hover:bg-blue-700"
               active-class="bg-blue-600 shadow-md"
             >
+              <!-- Clipboard -->
               <svg
                 xmlns="http://www.w3.org/2000/svg"
                 class="w-5 h-5 mr-3"
@@ -124,13 +129,65 @@
                 stroke="currentColor"
               >
                 <path
+                  stroke-width="2"
                   stroke-linecap="round"
                   stroke-linejoin="round"
-                  stroke-width="2"
-                  d="M9 12h6m-3-3v6m9 0a9 9 0 11-18 0 9 9 0 0118 0z"
+                  d="M9 5h6m2 0h1a1 1 0 011 1v14a1 1 0 01-1 1H6a1 1 0 01-1-1V6a1 1 0 011-1h1m2-2h6v4H9V3z"
                 />
               </svg>
               Riwayat Medis
+            </router-link>
+          </li>
+
+          <!-- Obat -->
+          <li>
+            <router-link
+              to="/medicine"
+              class="flex items-center p-3 rounded-lg font-medium text-blue-100 hover:bg-blue-700"
+              active-class="bg-blue-600 shadow-md"
+            >
+              <!-- Pill -->
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                class="w-5 h-5 mr-3"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  stroke-width="2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  d="M21 7a5 5 0 00-9.9-1M3 17a5 5 0 019.9 1M14 10l-4 4"
+                />
+              </svg>
+              Obat
+            </router-link>
+          </li>
+
+          <!-- Request Obat -->
+          <li>
+            <router-link
+              to="/request-drug"
+              class="flex items-center p-3 rounded-lg font-medium text-blue-100 hover:bg-blue-700"
+              active-class="bg-blue-600 shadow-md"
+            >
+              <!-- Clipboard + Plus -->
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                class="w-5 h-5 mr-3"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  stroke-width="2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  d="M12 11v6m3-3H9m2-9h6v4H9V3zM6 5h1a1 1 0 011 1v14a1 1 0 01-1 1H6a1 1 0 01-1-1V6a1 1 0 011-1z"
+                />
+              </svg>
+              Request Obat
             </router-link>
           </li>
         </ul>

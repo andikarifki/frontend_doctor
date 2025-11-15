@@ -25,11 +25,37 @@
     <!-- DATA PASIEN -->
     <div v-else class="space-y-8">
       <!-- HEADER -->
-      <div class="border-b pb-4">
-        <h2 class="text-2xl font-bold text-blue-800">
-          Detail Pasien: {{ pasien.nama }}
-        </h2>
-        <p class="text-gray-600">ID Pasien: {{ pasien.id }}</p>
+      <div class="border-b pb-4 flex justify-between items-center">
+        <div>
+          <h2 class="text-2xl font-bold text-blue-800">
+            Detail Pasien: {{ pasien.nama }}
+          </h2>
+          <p class="text-gray-600">ID Pasien: {{ pasien.id }}</p>
+        </div>
+        <div class="flex gap-2">
+          <button
+            @click="toggleEdit"
+            class="bg-yellow-400 hover:bg-yellow-500 text-gray-800 py-2 px-3 rounded flex items-center gap-2"
+          >
+            ✏️ {{ isEditing ? "Batal" : "Edit" }}
+          </button>
+          <button
+            @click="openWhatsApp(editableInfo['No. Telepon'])"
+            class="bg-green-500 hover:bg-green-600 text-white py-2 px-3 rounded flex items-center gap-2"
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              class="w-5 h-5"
+              fill="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                d="M20.52 3.48A11.86 11.86 0 0012.06 0C5.52 0 .27 5.25.27 11.76a11.64 11.64 0 001.6 5.93L0 24l6.49-1.7a12.1 12.1 0 005.52 1.34h.01c6.54 0 11.79-5.25 11.79-11.76a11.72 11.72 0 00-3.29-8.4zM12 21.3a9.44 9.44 0 01-4.81-1.31l-.34-.2-3.86 1 1.03-3.76-.22-.35a9.39 9.39 0 01-1.44-5.02C2.36 6.8 6.81 2.4 12 2.4a9.5 9.5 0 019.6 9.36c0 5.3-4.43 9.54-9.6 9.54zm5.04-7.15c-.27-.14-1.63-.8-1.88-.89-.25-.1-.43-.14-.6.14-.17.27-.68.89-.83 1.07-.15.17-.3.2-.55.07-.27-.14-1.14-.42-2.17-1.34-.8-.71-1.34-1.6-1.5-1.87-.15-.27-.02-.41.11-.55.12-.12.27-.3.41-.45.14-.17.18-.27.27-.45.09-.17.05-.34-.02-.48-.07-.14-.6-1.44-.82-1.97-.22-.54-.44-.46-.6-.46h-.5c-.17 0-.48.07-.73.34-.25.27-.95.93-.95 2.27s.97 2.64 1.11 2.82c.14.17 1.9 3 4.62 4.15.65.28 1.15.45 1.55.58.65.2 1.24.17 1.7.1.52-.08 1.63-.66 1.86-1.3.22-.65.22-1.2.15-1.31-.07-.11-.25-.18-.52-.32"
+              />
+            </svg>
+            WhatsApp
+          </button>
+        </div>
       </div>
 
       <!-- INFORMASI DASAR -->
@@ -40,7 +66,7 @@
         <table class="w-full border border-gray-200 rounded-lg overflow-hidden">
           <tbody class="divide-y divide-gray-200">
             <tr
-              v-for="(value, key) in basicInfo"
+              v-for="(value, key) in editableInfo"
               :key="key"
               class="hover:bg-gray-50"
             >
@@ -49,10 +75,30 @@
               >
                 {{ key }}
               </th>
-              <td class="px-4 py-2 text-gray-800">{{ value }}</td>
+              <td class="px-4 py-2 text-gray-800">
+                <template v-if="isEditing">
+                  <input
+                    v-model="editableInfo[key]"
+                    class="border rounded px-2 py-1 w-full"
+                    :type="key === 'Tanggal Lahir' ? 'date' : 'text'"
+                  />
+                </template>
+                <template v-else>
+                  {{ value }}
+                </template>
+              </td>
             </tr>
           </tbody>
         </table>
+
+        <div v-if="isEditing" class="mt-4 flex gap-2">
+          <button
+            @click="saveChanges"
+            class="bg-blue-600 hover:bg-blue-700 text-white py-2 px-4 rounded"
+          >
+            💾 Simpan Perubahan
+          </button>
+        </div>
       </section>
 
       <!-- DAFTAR PRAKTIK -->
@@ -60,7 +106,6 @@
         <h3 class="text-xl font-semibold mb-3 text-gray-800 border-b pb-2">
           🏥 Tempat Periksa
         </h3>
-
         <div v-if="pasien.praktiks && pasien.praktiks.length > 0">
           <table
             class="w-full border border-gray-200 rounded-lg overflow-hidden"
@@ -95,7 +140,6 @@
         <h3 class="text-xl font-semibold mb-3 text-gray-800 border-b pb-2">
           💊 Catatan Medis
         </h3>
-
         <div v-if="pasien.medical_records && pasien.medical_records.length > 0">
           <table
             class="w-full border border-gray-200 rounded-lg overflow-hidden"
@@ -137,12 +181,15 @@
 <script setup>
 import { ref, computed, onMounted, watch } from "vue";
 import { useRoute } from "vue-router";
+import { usePasienStore } from "@/stores/pasienStore";
 
 const route = useRoute();
+const store = usePasienStore();
 
 const pasien = ref({});
 const isLoading = ref(true);
 const error = ref(null);
+const isEditing = ref(false);
 
 const pasienId = computed(() => route.params.id);
 
@@ -157,15 +204,10 @@ const formatDate = (dateString) => {
   });
 };
 
-// Map tampilan info dasar
-const basicInfo = computed(() => ({
-  ID: pasien.value.id || "-",
-  NIK: pasien.value.nik || "-",
-  Nama: pasien.value.nama || "-",
-  "Tanggal Lahir": formatDate(pasien.value.tanggal),
-  Status: pasien.value.status || "-",
-}));
+// Editable info
+const editableInfo = ref({});
 
+// Fetch data pasien
 const fetchPasienData = async (id) => {
   if (!id) {
     isLoading.value = false;
@@ -176,6 +218,7 @@ const fetchPasienData = async (id) => {
   isLoading.value = true;
   error.value = null;
   pasien.value = {};
+  editableInfo.value = {};
 
   const API_URL = `http://127.0.0.1:8000/api/pasien/show/${id}`;
 
@@ -188,12 +231,71 @@ const fetchPasienData = async (id) => {
     }
 
     pasien.value = data.data;
+
+    // Map editable info
+    editableInfo.value = {
+      ID: pasien.value.id,
+      NIK: pasien.value.nik,
+      Nama: pasien.value.nama,
+      "Tanggal Lahir": pasien.value.tanggal,
+      Status: pasien.value.status,
+      "No. Telepon": pasien.value.no_tlp,
+    };
   } catch (err) {
     console.error("Error fetching pasien data:", err);
     error.value = err.message;
   } finally {
     isLoading.value = false;
   }
+};
+
+// Toggle mode edit
+const toggleEdit = () => {
+  isEditing.value = !isEditing.value;
+
+  // Reset values jika batal edit
+  if (!isEditing.value && pasien.value.id) {
+    editableInfo.value = {
+      ID: pasien.value.id,
+      NIK: pasien.value.nik,
+      Nama: pasien.value.nama,
+      "Tanggal Lahir": pasien.value.tanggal,
+      Status: pasien.value.status,
+      "No. Telepon": pasien.value.no_tlp,
+    };
+  }
+};
+
+// Save changes
+const saveChanges = async () => {
+  try {
+    const payload = {
+      nama: editableInfo.value.Nama,
+      tanggal: editableInfo.value["Tanggal Lahir"],
+      status: editableInfo.value.Status,
+      no_tlp: editableInfo.value["No. Telepon"],
+    };
+
+    await store.updatePatient(pasienId.value, payload);
+
+    // Update local state supaya UI langsung berubah
+    pasien.value = { ...pasien.value, ...payload };
+    isEditing.value = false;
+
+    alert("Data pasien berhasil diperbarui ✅");
+  } catch (err) {
+    console.error("Gagal update pasien:", err);
+    alert("Gagal memperbarui data: " + err.message);
+  }
+};
+
+// WhatsApp
+const openWhatsApp = (number) => {
+  if (!number) return alert("Nomor WhatsApp tidak tersedia.");
+
+  const cleaned = number.replace(/^0/, "62");
+  const url = `https://wa.me/${cleaned}`;
+  window.open(url, "_blank");
 };
 
 onMounted(() => fetchPasienData(pasienId.value));
