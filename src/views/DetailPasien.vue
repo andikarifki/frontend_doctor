@@ -77,14 +77,34 @@
               </th>
               <td class="px-4 py-2 text-gray-800">
                 <template v-if="isEditing">
-                  <input
-                    v-model="editableInfo[key]"
-                    class="border rounded px-2 py-1 w-full"
-                    :type="key === 'Tanggal Lahir' ? 'date' : 'text'"
-                  />
+                  <template v-if="key === 'Status'">
+                    <select
+                      v-model="editableInfo[key]"
+                      class="border rounded px-2 py-1 w-full"
+                    >
+                      <option value="Aktif">Aktif</option>
+                      <option value="Tidak Aktif">Tidak Aktif</option>
+                    </select>
+                  </template>
+                  <template v-else>
+                    <input
+                      v-model="editableInfo[key]"
+                      class="border rounded px-2 py-1 w-full"
+                      :type="key === 'Tanggal Lahir' ? 'date' : 'text'"
+                    />
+                  </template>
                 </template>
                 <template v-else>
-                  {{ value }}
+                  <span
+                    :class="{
+                      'text-green-600 font-semibold':
+                        key === 'Status' && value === 'Aktif',
+                      'text-red-600 font-semibold':
+                        key === 'Status' && value === 'Tidak Aktif',
+                    }"
+                  >
+                    {{ key === "Tanggal Lahir" ? formatDate(value) : value }}
+                  </span>
                 </template>
               </td>
             </tr>
@@ -193,6 +213,7 @@ const isEditing = ref(false);
 
 const pasienId = computed(() => route.params.id);
 
+// Format date untuk tampilan
 const formatDate = (dateString) => {
   if (!dateString) return "-";
   const date = new Date(dateString);
@@ -204,7 +225,7 @@ const formatDate = (dateString) => {
   });
 };
 
-// Editable info
+// Editable info untuk form edit
 const editableInfo = ref({});
 
 // Fetch data pasien
@@ -226,18 +247,16 @@ const fetchPasienData = async (id) => {
     const response = await fetch(API_URL);
     const data = await response.json();
 
-    if (!response.ok || !data.success) {
+    if (!response.ok || !data.success)
       throw new Error(data.message || "Gagal memuat data pasien.");
-    }
 
     pasien.value = data.data;
 
     // Map editable info
     editableInfo.value = {
-      ID: pasien.value.id,
       NIK: pasien.value.nik,
       Nama: pasien.value.nama,
-      "Tanggal Lahir": pasien.value.tanggal,
+      "Tanggal Lahir": pasien.value.tanggal?.substring(0, 10) || "", // yyyy-MM-dd untuk input
       Status: pasien.value.status,
       "No. Telepon": pasien.value.no_tlp,
     };
@@ -253,15 +272,14 @@ const fetchPasienData = async (id) => {
 const toggleEdit = () => {
   isEditing.value = !isEditing.value;
 
-  // Reset values jika batal edit
   if (!isEditing.value && pasien.value.id) {
+    // Reset ke data asli
     editableInfo.value = {
-      ID: pasien.value.id,
       NIK: pasien.value.nik,
       Nama: pasien.value.nama,
-      "Tanggal Lahir": pasien.value.tanggal,
+      "Tanggal Lahir": pasien.value.tanggal?.substring(0, 10) || "",
       Status: pasien.value.status,
-      "No. Telepon": pasien.value.no_tlp,
+      "No. Telepon": pasien.value.no_tlp ?? "",
     };
   }
 };
@@ -273,12 +291,11 @@ const saveChanges = async () => {
       nama: editableInfo.value.Nama,
       tanggal: editableInfo.value["Tanggal Lahir"],
       status: editableInfo.value.Status,
-      no_tlp: editableInfo.value["No. Telepon"],
+      "No. Telepon": pasien.value.no_tlp || "",
     };
 
     await store.updatePatient(pasienId.value, payload);
 
-    // Update local state supaya UI langsung berubah
     pasien.value = { ...pasien.value, ...payload };
     isEditing.value = false;
 
@@ -292,7 +309,6 @@ const saveChanges = async () => {
 // WhatsApp
 const openWhatsApp = (number) => {
   if (!number) return alert("Nomor WhatsApp tidak tersedia.");
-
   const cleaned = number.replace(/^0/, "62");
   const url = `https://wa.me/${cleaned}`;
   window.open(url, "_blank");

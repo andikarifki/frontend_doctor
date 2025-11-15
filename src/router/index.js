@@ -9,6 +9,7 @@ import CreatePraktikPasien from "../views/CreatePraktikPasien.vue";
 import MedicalRecord from "../views/MedicalRecord.vue";
 import Medicine from "../views/Medicine.vue";
 import RequestDrug from "../views/RequestDrug.vue";
+import Pasien from "../views/Pasien.vue";
 
 const isAuthenticated = () => localStorage.getItem("authToken") !== null;
 
@@ -24,6 +25,12 @@ const routes = [
     name: "Dashboard",
     component: Dashboard,
     meta: { requiresAuth: true, documentTitle: "Dashboard", fullLayout: false },
+  },
+  {
+    path: "/pasien",
+    name: "Pasien",
+    component: Pasien,
+    meta: { requiresAuth: true, documentTitle: "Daftar Pasien", fullLayout: false },
   },
   {
     path: "/pasien/create",

@@ -27,7 +27,6 @@
       </div>
 
       <!-- Menu -->
-      <!-- Menu -->
       <nav>
         <h2
           class="text-sm font-semibold text-blue-300 mb-3 uppercase tracking-wider"
@@ -58,6 +57,31 @@
                 />
               </svg>
               Halaman Utama
+            </router-link>
+          </li>
+
+          <!-- Pasien -->
+          <li>
+            <router-link
+              to="/pasien"
+              class="flex items-center p-3 rounded-lg font-medium text-blue-100 hover:bg-blue-700"
+              active-class="bg-blue-600 shadow-md"
+            >
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                class="w-5 h-5 mr-3"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M5.121 17.804A9 9 0 1116.88 6.196 9 9 0 015.12 17.804zM12 12a3 3 0 100-6 3 3 0 000 6z"
+                />
+              </svg>
+              Pasien
             </router-link>
           </li>
 
