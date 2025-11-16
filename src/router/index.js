@@ -11,6 +11,7 @@ import Medicine from "../views/Medicine.vue";
 import RequestDrug from "../views/RequestDrug.vue";
 import Pasien from "../views/Pasien.vue";
 import DaftarPermintaan from "../views/DaftarPermintaan.vue";
+import CreateObat from "../views/CreateObat.vue";
 
 const isAuthenticated = () => localStorage.getItem("authToken") !== null;
 
@@ -74,6 +75,12 @@ const routes = [
     name: "Medicine",
     component: Medicine,
     meta: { requiresAuth: true, documentTitle: "Menu Obat", fullLayout: false },
+  },
+    {
+    path: "/medicine/tambah",
+    name: "MedicineTambah",
+    component: CreateObat,
+    meta: { requiresAuth: true, documentTitle: "Tambah Obat", fullLayout: false },
   },
   {
     path: "/daftar-permintaan",

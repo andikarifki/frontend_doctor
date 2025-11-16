@@ -1,165 +1,122 @@
 <template>
-  <div class="p-6 max-w-4xl mx-auto">
-    <h1 class="text-2xl font-bold mb-4">
-      Stok Obat & Permintaan Dokter (Dummy)
-    </h1>
+  <div class="p-6 max-w-5xl mx-auto">
+    <div class="mb-4">
+      <router-link
+        to="/medicine/tambah"
+        class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
+      >
+        Tambah Obat
+      </router-link>
+    </div>
 
-    <!-- ===================== -->
-    <!--  BAGIAN STOK OBAT     -->
-    <!-- ===================== -->
-    <h2 class="text-xl font-semibold mt-4 mb-2">Stok Obat (Dummy)</h2>
+    <div class="overflow-x-auto">
+      <table class="w-full border-collapse border shadow rounded">
+        <thead class="bg-gray-200">
+          <tr>
+            <th class="border px-3 py-2">ID</th>
+            <th class="border px-3 py-2">Nama Obat</th>
+            <th class="border px-3 py-2">Stok</th>
+            <th class="border px-3 py-2">Satuan</th>
+            <th class="border px-3 py-2">Kategori</th>
+            <th class="border px-3 py-2">Expired Date</th>
+            <th class="border px-3 py-2">Harga</th>
+            <th class="border px-3 py-2">Aksi</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr v-for="obat in stokObat" :key="obat.id" class="hover:bg-gray-100">
+            <td class="border px-3 py-2 text-center">{{ obat.id }}</td>
+            <td class="border px-3 py-2">{{ obat.nama_obat }}</td>
+            <td class="border px-3 py-2 text-center">{{ obat.stok }}</td>
+            <td class="border px-3 py-2 text-center">{{ obat.satuan }}</td>
+            <td class="border px-3 py-2">{{ obat.kategori }}</td>
+            <td class="border px-3 py-2 text-center">
+              {{ obat.expired_date }}
+            </td>
+            <td class="border px-3 py-2 text-right">{{ obat.harga }}</td>
+            <td class="border px-3 py-2 text-center flex justify-center">
+              <button
+                @click="hapusObat(obat.id)"
+                class="bg-red-600 hover:bg-red-700 text-white py-1 px-2 rounded transition flex items-center justify-center"
+                title="Hapus Obat"
+              >
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  class="w-5 h-5"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6M9 7h6m-7 0l1-3h4l1 3"
+                  />
+                </svg>
+              </button>
+            </td>
+          </tr>
 
-    <table class="w-full border mb-8">
-      <thead>
-        <tr class="bg-gray-200">
-          <th class="p-2 border">Obat</th>
-          <th class="p-2 border">Stok</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr v-for="ob in stokObat" :key="ob.id">
-          <td class="p-2 border">{{ ob.nama }}</td>
-          <td class="p-2 border">{{ ob.stok }}</td>
-        </tr>
-      </tbody>
-    </table>
-
-    <button
-      @click="kirimRequestDariDokter"
-      class="bg-blue-600 text-white px-4 py-2 rounded mb-6"
-    >
-      Simulasi Dokter Kirim Request
-    </button>
-
-    <!-- ===================== -->
-    <!--  DAFTAR PERMINTAAN    -->
-    <!-- ===================== -->
-    <h2 class="text-xl font-semibold mb-3">Daftar Permintaan Obat</h2>
-
-    <table class="w-full border">
-      <thead>
-        <tr class="bg-gray-200">
-          <th class="p-2 border">Dokter</th>
-          <th class="p-2 border">Obat</th>
-          <th class="p-2 border">Jumlah</th>
-          <th class="p-2 border">Status</th>
-          <th class="p-2 border">Aksi</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr v-for="req in requests" :key="req.id">
-          <td class="p-2 border">{{ req.dokter }}</td>
-          <td class="p-2 border">{{ req.obat }}</td>
-          <td class="p-2 border">{{ req.jumlah }}</td>
-          <td class="p-2 border">
-            <span
-              :class="{
-                'text-yellow-600': req.status === 'pending',
-                'text-green-600': req.status === 'disetujui',
-                'text-red-600': req.status === 'ditolak',
-              }"
-            >
-              {{ req.status }}
-            </span>
-          </td>
-
-          <td class="p-2 border space-x-2">
-            <button
-              v-if="req.status === 'pending'"
-              @click="setujuiRequest(req)"
-              class="bg-green-600 text-white px-3 py-1 rounded"
-            >
-              Setujui
-            </button>
-
-            <button
-              v-if="req.status === 'pending'"
-              @click="tolakRequest(req)"
-              class="bg-red-600 text-white px-3 py-1 rounded"
-            >
-              Tolak
-            </button>
-          </td>
-        </tr>
-      </tbody>
-    </table>
+          <tr v-if="stokObat.length === 0">
+            <td colspan="8" class="text-center py-4 text-gray-500">
+              Tidak ada data stok obat.
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
   </div>
 </template>
 
 <script setup>
-import { ref } from "vue";
+import { ref, onMounted } from "vue";
+import axios from "axios";
 
-// =========================
-//  DUMMY STOK OBAT
-// =========================
-const stokObat = ref([
-  { id: 1, nama: "Paracetamol 500mg", stok: 25 },
-  { id: 2, nama: "Amoxicillin 500mg", stok: 50 },
-  { id: 3, nama: "Vitamin C 500mg", stok: 40 },
-]);
+const stokObat = ref([]);
 
-// =========================
-//  DUMMY REQUEST
-// =========================
-const requests = ref([
-  {
-    id: 1,
-    dokter: "dr. Sinta",
-    obat: "Paracetamol 500mg",
-    jumlah: 3,
-    status: "pending",
-  },
-]);
-
-// =========================
-//  DOKTER KIRIM OTOMATIS
-// =========================
-const kirimRequestDariDokter = () => {
-  const daftarObat = stokObat.value;
-  const randomObat = daftarObat[Math.floor(Math.random() * daftarObat.length)];
-
-  const contohRequest = {
-    id: Date.now(),
-    dokter: "dr. Budi",
-    obat: randomObat.nama,
-    jumlah: Math.floor(Math.random() * 5) + 1,
-    status: "pending",
-  };
-
-  requests.value.push(contohRequest);
+const fetchStokObat = async () => {
+  try {
+    const response = await axios.get("http://127.0.0.1:8000/api/stok-obat");
+    if (response.data.success) {
+      stokObat.value = response.data.data;
+    }
+  } catch (error) {
+    console.error("Gagal mengambil data stok obat:", error);
+  }
 };
 
-// =========================
-//  SETUJUI REQUEST
-// =========================
-const setujuiRequest = (req) => {
-  const obat = stokObat.value.find((o) => o.nama === req.obat);
+onMounted(fetchStokObat);
 
-  if (!obat) {
-    alert("Obat tidak ditemukan!");
-    return;
+const hapusObat = async (id) => {
+  if (!confirm("Apakah yakin ingin menghapus obat ini?")) return;
+
+  try {
+    await axios.delete(`http://127.0.0.1:8000/api/stok-obat/${id}`);
+    // hapus dari frontend juga
+    stokObat.value = stokObat.value.filter((o) => o.id !== id);
+  } catch (error) {
+    console.error("Gagal menghapus obat:", error);
+    alert("Terjadi kesalahan saat menghapus obat.");
   }
-
-  if (obat.stok < req.jumlah) {
-    alert("Stok tidak cukup!");
-    req.status = "ditolak";
-    return;
-  }
-
-  obat.stok -= req.jumlah;
-  req.status = "disetujui";
-};
-
-// =========================
-//  TOLAK REQUEST
-// =========================
-const tolakRequest = (req) => {
-  req.status = "ditolak";
 };
 </script>
 
 <style scoped>
 table {
   border-collapse: collapse;
+}
+th,
+td {
+  border: 1px solid #ddd;
+  padding: 0.5rem;
+}
+thead th {
+  background-color: #f3f4f6;
+  text-align: center;
+}
+button {
+  cursor: pointer;
+  font-size: 1.2rem;
 }
 </style>
