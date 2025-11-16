@@ -10,6 +10,7 @@ import MedicalRecord from "../views/MedicalRecord.vue";
 import Medicine from "../views/Medicine.vue";
 import RequestDrug from "../views/RequestDrug.vue";
 import Pasien from "../views/Pasien.vue";
+import DaftarPermintaan from "../views/DaftarPermintaan.vue";
 
 const isAuthenticated = () => localStorage.getItem("authToken") !== null;
 
@@ -73,6 +74,12 @@ const routes = [
     name: "Medicine",
     component: Medicine,
     meta: { requiresAuth: true, documentTitle: "Menu Obat", fullLayout: false },
+  },
+  {
+    path: "/daftar-permintaan",
+    name: "DaftarPermintaan",
+    component: DaftarPermintaan,
+    meta: {requiresAuth: true, documentTitle: "Daftar Permintaan Obat", fullLayout: false},
   },
   {
     path: "/request-drug",

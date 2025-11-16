@@ -163,30 +163,57 @@
             </router-link>
           </li>
 
-          <!-- Obat -->
+          <!-- SUBMENU APOTEKER -->
           <li>
-            <router-link
-              to="/medicine"
-              class="flex items-center p-3 rounded-lg font-medium text-blue-100 hover:bg-blue-700"
-              active-class="bg-blue-600 shadow-md"
+            <button
+              @click="apotekOpen = !apotekOpen"
+              class="flex items-center w-full p-3 rounded-lg hover:bg-blue-700"
             >
-              <!-- Pill -->
               <svg
                 xmlns="http://www.w3.org/2000/svg"
                 class="w-5 h-5 mr-3"
-                fill="none"
                 viewBox="0 0 24 24"
+                fill="none"
                 stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
               >
-                <path
-                  stroke-width="2"
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  d="M21 7a5 5 0 00-9.9-1M3 17a5 5 0 019.9 1M14 10l-4 4"
-                />
+                <path d="M7 7h10" />
+                <path d="M7 17h10" />
+                <rect x="3" y="3" width="7" height="7" rx="1" />
+                <rect x="14" y="14" width="7" height="7" rx="1" />
               </svg>
-              Obat
-            </router-link>
+              Apoteker
+              <span class="ml-auto text-sm">
+                {{ apotekOpen ? "▲" : "▼" }}
+              </span>
+            </button>
+
+            <!-- Submenu hanya Stok Obat -->
+            <ul
+              v-show="apotekOpen"
+              class="ml-6 mt-2 space-y-1 border-l border-blue-600 pl-3"
+            >
+              <li>
+                <router-link
+                  to="/medicine"
+                  class="flex items-center p-2 rounded-lg hover:bg-blue-700"
+                  active-class="bg-blue-600 shadow-md"
+                >
+                  Stok Obat
+                </router-link>
+              </li>
+              <li>
+                <router-link
+                  to="/daftar-permintaan"
+                  class="flex items-center p-2 rounded-lg hover:bg-blue-700"
+                  active-class="bg-blue-600 shadow-md"
+                >
+                  Daftar Permintaan
+                </router-link>
+              </li>
+            </ul>
           </li>
 
           <!-- Request Obat -->
@@ -275,6 +302,9 @@ const store = usePasienStore();
 const route = useRoute();
 const router = useRouter();
 const authStore = useAuthStore();
+
+// SUBMENU APOTEKER
+const apotekOpen = ref(false);
 
 // Sidebar mobile toggle
 const showSidebar = ref(false);
