@@ -59,30 +59,23 @@
 <script setup>
 import { ref, onMounted } from "vue";
 import { usePasienStore } from "@/stores/pasienStore";
+import { usePraktikStore } from "@/stores/praktikStore";
 
-const store = usePasienStore();
+const pasienStore = usePasienStore();
+const praktikStore = usePraktikStore();
 
 const totalPasien = ref(0);
 const totalPraktik = ref(0);
-const totalMedicalRecord = ref(0);
 
 const fetchDashboardData = async () => {
   try {
-    // Ambil data pasien
-    await store.fetchPatients();
-    totalPasien.value = store.patients.length;
+    // ambil pasien
+    await pasienStore.fetchPatients();
+    totalPasien.value = pasienStore.patients.length;
 
-    // Ambil data praktik (anggap store punya fetchPractiks)
-    if (store.fetchPractiks) {
-      await store.fetchPractiks();
-      totalPraktik.value = store.praktiks.length;
-    }
-
-    // Ambil data medical record (anggap store punya fetchMedicalRecords)
-    if (store.fetchMedicalRecords) {
-      await store.fetchMedicalRecords();
-      totalMedicalRecord.value = store.medical_records.length;
-    }
+    // ambil praktik dari praktikStore
+    await praktikStore.fetchPraktikList();
+    totalPraktik.value = praktikStore.praktikList.length;
   } catch (err) {
     console.error("Gagal fetch data dashboard:", err);
   }

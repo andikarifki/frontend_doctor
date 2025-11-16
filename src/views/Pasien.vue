@@ -14,7 +14,7 @@
         type="text"
         v-model="searchQuery"
         @input="searchPatientsDebounced"
-        placeholder="🔍 Cari nama pasien..."
+        placeholder="🔍 Cari NIK atau nama pasien..."
         class="block border-gray-300 rounded-md shadow-sm p-2 text-sm border w-full md:w-1/3 max-w-md focus:ring-indigo-500 focus:border-indigo-500"
       />
     </section>
