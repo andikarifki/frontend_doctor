@@ -96,9 +96,6 @@ const form = ref({
   status: "Aktif",
 });
 
-// 🏥 Daftar praktik
-const praktikList = ref([]);
-
 // 🔔 State feedback API
 const apiMessage = ref(null);
 const validationErrors = ref([]);
