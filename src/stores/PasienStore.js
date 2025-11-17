@@ -65,5 +65,19 @@ export const usePasienStore = defineStore("pasien", {
       await this.executeApiCall("delete", `pasien/${id}`);
       await this.fetchPatients();
     },
+    // pasienStore.js
+
+    async getPatientById(id) {
+      this.loading = true;
+      try {
+        const response = await api.get(`pasien/show/${id}`);
+        return response.data.data; // return langsung datanya
+      } catch (error) {
+        console.error("Error get detail pasien:", error);
+        throw error;
+      } finally {
+        this.loading = false;
+      }
+    },
   },
 });

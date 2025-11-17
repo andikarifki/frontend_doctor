@@ -228,40 +228,23 @@ const formatDate = (dateString) => {
 // Editable info untuk form edit
 const editableInfo = ref({});
 
-// Fetch data pasien
 const fetchPasienData = async (id) => {
-  if (!id) {
-    isLoading.value = false;
-    error.value = "ID Pasien tidak ditemukan di URL.";
-    return;
-  }
-
-  isLoading.value = true;
-  error.value = null;
-  pasien.value = {};
-  editableInfo.value = {};
-
-  const API_URL = `http://127.0.0.1:8000/api/pasien/show/${id}`;
-
   try {
-    const response = await fetch(API_URL);
-    const data = await response.json();
+    isLoading.value = true;
+    error.value = null;
 
-    if (!response.ok || !data.success)
-      throw new Error(data.message || "Gagal memuat data pasien.");
+    const data = await store.getPatientById(id);
+    pasien.value = data;
 
-    pasien.value = data.data;
-
-    // Map editable info
+    // Mapping untuk form edit
     editableInfo.value = {
-      NIK: pasien.value.nik,
-      Nama: pasien.value.nama,
-      "Tanggal Lahir": pasien.value.tanggal?.substring(0, 10) || "", // yyyy-MM-dd untuk input
-      Status: pasien.value.status,
-      "No. Telepon": pasien.value.no_tlp,
+      NIK: data.nik,
+      Nama: data.nama,
+      "Tanggal Lahir": data.tanggal?.substring(0, 10) || "",
+      Status: data.status,
+      "No. Telepon": data.no_tlp ?? "",
     };
   } catch (err) {
-    console.error("Error fetching pasien data:", err);
     error.value = err.message;
   } finally {
     isLoading.value = false;
