@@ -16,8 +16,8 @@
             <th class="border px-3 py-2">ID</th>
             <th class="border px-3 py-2">Nama Obat</th>
             <th class="border px-3 py-2">Stok</th>
-            <th class="border px-3 py-2">Satuan</th>
-            <th class="border px-3 py-2">Kategori</th>
+            <th class="border px-3 py-2">Jenis Obat</th>
+            <th class="border px-3 py-2">Kategori Obat</th>
             <th class="border px-3 py-2">Expired Date</th>
             <th class="border px-3 py-2">Harga</th>
             <th class="border px-3 py-2">Aksi</th>

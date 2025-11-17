@@ -23,8 +23,9 @@
           <label
             for="username"
             class="block text-sm font-semibold text-gray-700 mb-1"
-            >Username</label
           >
+            Username
+          </label>
           <input
             id="username"
             type="text"
@@ -41,8 +42,9 @@
           <label
             for="password"
             class="block text-sm font-semibold text-gray-700 mb-1"
-            >Password</label
           >
+            Password
+          </label>
           <input
             id="password"
             :type="showPassword ? 'text' : 'password'"
@@ -118,12 +120,13 @@
           {{ authStore.loading ? "Sedang Memproses..." : "Login" }}
         </button>
 
-        <p
+        <!-- Pesan error -->
+        <div
           v-if="authStore.error"
-          class="text-red-600 text-sm text-center mt-3 animate-pulse"
+          class="bg-red-100 text-red-700 p-3 rounded-md text-sm text-center"
         >
           {{ authStore.error }}
-        </p>
+        </div>
       </form>
 
       <!-- Footer -->
@@ -139,6 +142,7 @@ import { ref } from "vue";
 import { useAuthStore } from "@/stores/auth";
 
 const authStore = useAuthStore();
+
 const username = ref("");
 const password = ref("");
 const showPassword = ref(false);
@@ -149,13 +153,15 @@ const togglePassword = () => {
 
 const handleLogin = async () => {
   authStore.error = null;
-  try {
-    await authStore.login({
-      username: username.value,
-      password: password.value,
-    });
-  } catch (err) {
-    console.error("Percobaan login gagal", err);
+
+  const success = await authStore.login({
+    username: username.value,
+    password: password.value,
+  });
+
+  // jika gagal, cukup diam di halaman login
+  if (!success) {
+    console.warn("Login gagal:", authStore.error);
   }
 };
 </script>

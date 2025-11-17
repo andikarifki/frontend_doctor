@@ -13,7 +13,14 @@ import Pasien from "../views/Pasien.vue";
 import DaftarPermintaan from "../views/DaftarPermintaan.vue";
 import CreateObat from "../views/CreateObat.vue";
 
+// Cek token
 const isAuthenticated = () => localStorage.getItem("authToken") !== null;
+
+// Ambil role user dari localStorage
+const getUserRole = () => {
+  const user = JSON.parse(localStorage.getItem("user"));
+  return user?.role || null;
+};
 
 const routes = [
   {
@@ -26,7 +33,7 @@ const routes = [
     path: "/dashboard",
     name: "Dashboard",
     component: Dashboard,
-    meta: { requiresAuth: true, documentTitle: "Dashboard", fullLayout: false },
+    meta: { requiresAuth: true, documentTitle: "Halaman Utama", fullLayout: false },
   },
   {
     path: "/pasien",
@@ -38,9 +45,9 @@ const routes = [
     path: "/pasien/create",
     name: "PasienCreate",
     component: PasienCreatePage,
-    meta: { requiresAuth: true, tdocumentTitle: "Daftar Pasien", fullLayout: false },
+    meta: { requiresAuth: true, documentTitle: "Daftar Pasien", fullLayout: false },
   },
-    {
+  {
     path: "/pasien/detail-pasien/:id",
     name: "DetailPasien",
     component: DetailPasien,
@@ -58,7 +65,7 @@ const routes = [
     component: PasienPraktik,
     meta: { requiresAuth: true, documentTitle: "Daftar Pasien Berobat", fullLayout: false },
   },
-   {
+  {
     path: "/pasien-praktik/tambah",
     name: "CreatePraktikPasien",
     component: CreatePraktikPasien,
@@ -76,7 +83,7 @@ const routes = [
     component: Medicine,
     meta: { requiresAuth: true, documentTitle: "Menu Obat", fullLayout: false },
   },
-    {
+  {
     path: "/medicine/tambah",
     name: "MedicineTambah",
     component: CreateObat,
@@ -86,7 +93,7 @@ const routes = [
     path: "/daftar-permintaan",
     name: "DaftarPermintaan",
     component: DaftarPermintaan,
-    meta: {requiresAuth: true, documentTitle: "Daftar Permintaan Obat", fullLayout: false},
+    meta: { requiresAuth: true, documentTitle: "Daftar Permintaan Obat", fullLayout: false },
   },
   {
     path: "/request-drug",
@@ -103,13 +110,32 @@ const router = createRouter({
 
 router.beforeEach((to, from, next) => {
   const loggedIn = isAuthenticated();
+  const role = getUserRole();
 
+  // Jika sudah login dan menuju halaman login
   if (to.name === "Login" && loggedIn) {
     return next({ name: "Dashboard" });
   }
 
+  // Jika membutuhkan autentikasi tapi belum login
   if (to.meta.requiresAuth && !loggedIn) {
     return next({ name: "Login" });
+  }
+
+  // Role-based access control
+  if (loggedIn) {
+    const adminRoutes = [
+      "Dashboard", "Pasien", "PasienCreate", "DetailPasien", "Praktik",
+      "PasienPraktik", "CreatePraktikPasien", "MedicalRecord",
+      "Medicine", "MedicineTambah", "DaftarPermintaan", "RequestDrug"
+    ];
+
+    const apotekRoutes = ["Medicine", "MedicineTambah", "DaftarPermintaan"];
+
+    if (role === "apotek" && !apotekRoutes.includes(to.name)) {
+      return next({ name: "Medicine" }); // redirect ke medicine jika apotek mencoba akses halaman lain
+    }
+    // admin bisa akses semua
   }
 
   next();
@@ -117,8 +143,8 @@ router.beforeEach((to, from, next) => {
 
 router.afterEach((to) => {
   const baseTitle = "Manajemen Praktik dr. Johan";
-  document.title = to.meta.title
-    ? `${to.meta.title} | ${baseTitle}`
+  document.title = to.meta.documentTitle
+    ? `${to.meta.documentTitle} | ${baseTitle}`
     : baseTitle;
 });
 

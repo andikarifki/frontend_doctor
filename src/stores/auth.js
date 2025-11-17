@@ -1,74 +1,102 @@
 // src/stores/auth.js
 import { defineStore } from "pinia";
-import api from "@/api/axios"; // Pastikan path benar
+import api from "@/api/axios";
+import router from "@/router";
 
 export const useAuthStore = defineStore("auth", {
   state: () => ({
-    // 1. STATE: Status Otentikasi
-    // Ambil Token dari Local Storage saat store diinisiasi
     authToken: localStorage.getItem("authToken") || null,
-    user: null,
+    user: JSON.parse(localStorage.getItem("user")) || null,
     loading: false,
     error: null,
   }),
 
   getters: {
-    // 2. GETTERS: Cek apakah Token ada
     isAuthenticated: (state) => !!state.authToken,
+    userRole: (state) => state.user?.role || null,
   },
 
   actions: {
-    // 3. ACTIONS: Panggilan API dan Modifikasi State
-
-    // Action A: Login dan Mendapatkan Token (Panggilan ke Laravel Sanctum)
     async login(credentials) {
       this.loading = true;
       this.error = null;
-      try {
-        // Panggilan API login (POST /api/login)
-        const response = await api.post("/login", credentials);
-        const token = response.data.token;
 
-        // Simpan token
+      try {
+        const response = await api.post("/login", credentials);
+
+        const token = response.data.access_token;
+        const role = response.data.role;
+
+        // simpan token
         this.authToken = token;
         localStorage.setItem("authToken", token);
 
-        // Ambil data user
+        // simpan user sementara dulu (role saja)
+        this.user = { role };
+        localStorage.setItem("user", JSON.stringify(this.user));
+
+        // ambil detail user lengkap
         await this.fetchUser();
 
-        // Redirect ke Dashboard (menggunakan router yang di-inject)
-        this.router.push("/dashboard");
+        // redirect sesuai role
+        if (role === "admin") {
+          router.push("/dashboard");
+        } else if (role === "apotek") {
+          router.push("/medicine");
+        } else {
+          router.push("/dashboard");
+        }
+
+        return true;
+
       } catch (err) {
+        // ★★ INI BAGIAN PENTING ★★
         this.error =
-          err.response?.data?.message || "Login gagal. Periksa kredensial.";
-        this.logout(); // Pastikan state bersih jika gagal
-        throw err;
+          err.response?.data?.message || "Username atau password salah!";
+
+        // login gagal → JANGAN logout otomatis
+        // cukup hapus token saja supaya tidak salah redirect
+        this.authToken = null;
+        this.user = null;
+        localStorage.removeItem("authToken");
+        localStorage.removeItem("user");
+
+        return false;
+
       } finally {
         this.loading = false;
       }
     },
 
-    // Action B: Mengambil Data Pengguna yang Dilindungi
     async fetchUser() {
       if (!this.isAuthenticated) return;
+
       try {
-        // Panggilan API yang dilindungi (GET /api/user)
         const response = await api.get("/user");
-        this.user = response.data;
-      } catch (error) {
-        // Jika API /user gagal, token tidak valid
-        console.error("Token tidak valid, melakukan logout.");
+
+        this.user = {
+          ...response.data,
+          role: this.user?.role || response.data.role,
+        };
+
+        localStorage.setItem("user", JSON.stringify(this.user));
+
+      } catch (err) {
+        console.error("Token invalid, auto logout");
         this.logout();
       }
     },
 
-    // Action C: Logout
-    logout() {
+    logout(redirect = true) {
       this.authToken = null;
       this.user = null;
+      this.error = null;
+      this.loading = false;
+
       localStorage.removeItem("authToken");
-      // Redirect ke halaman login
-      this.router.push("/");
+      localStorage.removeItem("user");
+
+      if (redirect) router.push("/login");
     },
   },
 });

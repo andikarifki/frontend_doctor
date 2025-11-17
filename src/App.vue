@@ -1,6 +1,6 @@
 <template>
   <div class="min-h-screen bg-gray-100 flex">
-    <!-- Sidebar untuk desktop dan mobile -->
+    <!-- Sidebar -->
     <aside
       v-if="!needsFullLayout && (showSidebar || isDesktop)"
       class="fixed inset-y-0 left-0 w-64 bg-blue-800 text-white p-4 shadow-2xl z-50 transform transition-transform duration-300 lg:relative lg:translate-x-0"
@@ -34,218 +34,116 @@
           Menu Utama
         </h2>
         <ul class="space-y-1">
-          <!-- Dashboard -->
-          <li>
-            <router-link
-              to="/"
-              class="flex items-center p-3 rounded-lg font-medium text-blue-100 hover:bg-blue-700"
-              active-class="bg-blue-600 shadow-md"
-            >
-              <!-- Home -->
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                class="w-5 h-5 mr-3"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
+          <!-- Menu Admin -->
+          <template v-if="role === 'admin'">
+            <li>
+              <router-link
+                to="/dashboard"
+                class="flex items-center p-3 rounded-lg text-blue-100 hover:bg-blue-700"
+                active-class="bg-blue-600 shadow-md"
+                >Halaman Utama</router-link
               >
-                <path
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  stroke-width="2"
-                  d="M3 12l9-9 9 9M4 10v10a1 1 0 001 1h4m6 0h4a1 1 0 001-1V10"
-                />
-              </svg>
-              Halaman Utama
-            </router-link>
-          </li>
-
-          <!-- Pasien -->
-          <li>
-            <router-link
-              to="/pasien"
-              class="flex items-center p-3 rounded-lg font-medium text-blue-100 hover:bg-blue-700"
-              active-class="bg-blue-600 shadow-md"
-            >
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                class="w-5 h-5 mr-3"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
+            </li>
+            <li>
+              <router-link
+                to="/pasien"
+                class="flex items-center p-3 rounded-lg text-blue-100 hover:bg-blue-700"
+                active-class="bg-blue-600 shadow-md"
+                >Pasien</router-link
               >
-                <path
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  stroke-width="2"
-                  d="M5.121 17.804A9 9 0 1116.88 6.196 9 9 0 015.12 17.804zM12 12a3 3 0 100-6 3 3 0 000 6z"
-                />
-              </svg>
-              Pasien
-            </router-link>
-          </li>
-
-          <!-- Daftar Praktik -->
-          <li>
-            <router-link
-              to="/praktik"
-              class="flex items-center p-3 rounded-lg font-medium text-blue-100 hover:bg-blue-700"
-              active-class="bg-blue-600 shadow-md"
-            >
-              <!-- Stethoscope -->
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                class="w-5 h-5 mr-3"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
+            </li>
+            <li>
+              <router-link
+                to="/praktik"
+                class="flex items-center p-3 rounded-lg text-blue-100 hover:bg-blue-700"
+                active-class="bg-blue-600 shadow-md"
+                >Daftar Praktik</router-link
               >
-                <path
-                  stroke-width="2"
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  d="M6 3v6a6 6 0 0012 0V3m-6 14v4m-4 0h8"
-                />
-              </svg>
-              Daftar Praktik
-            </router-link>
-          </li>
-
-          <!-- Daftar Pasien Berobat -->
-          <li>
-            <router-link
-              to="/pasien-praktik"
-              class="flex items-center p-3 rounded-lg font-medium text-blue-100 hover:bg-blue-700"
-              active-class="bg-blue-600 shadow-md"
-            >
-              <!-- Users -->
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                class="w-5 h-5 mr-3"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
+            </li>
+            <li>
+              <router-link
+                to="/pasien-praktik"
+                class="flex items-center p-3 rounded-lg text-blue-100 hover:bg-blue-700"
+                active-class="bg-blue-600 shadow-md"
+                >Daftar Pasien Berobat</router-link
               >
-                <path
-                  stroke-width="2"
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  d="M17 20v-2a4 4 0 00-3-3.87M9 14.13A4 4 0 006 18v2m6-10a4 4 0 100-8 4 4 0 000 8z"
-                />
-              </svg>
-              Daftar Pasien Berobat
-            </router-link>
-          </li>
-
-          <!-- Riwayat Medis -->
-          <li>
-            <router-link
-              to="/medical-record"
-              class="flex items-center p-3 rounded-lg font-medium text-blue-100 hover:bg-blue-700"
-              active-class="bg-blue-600 shadow-md"
-            >
-              <!-- Clipboard -->
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                class="w-5 h-5 mr-3"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
+            </li>
+            <li>
+              <router-link
+                to="/medical-record"
+                class="flex items-center p-3 rounded-lg text-blue-100 hover:bg-blue-700"
+                active-class="bg-blue-600 shadow-md"
+                >Riwayat Medis</router-link
               >
-                <path
-                  stroke-width="2"
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  d="M9 5h6m2 0h1a1 1 0 011 1v14a1 1 0 01-1 1H6a1 1 0 01-1-1V6a1 1 0 011-1h1m2-2h6v4H9V3z"
-                />
-              </svg>
-              Riwayat Medis
-            </router-link>
-          </li>
-
-          <!-- SUBMENU APOTEKER -->
-          <li>
-            <button
-              @click="apotekOpen = !apotekOpen"
-              class="flex items-center w-full p-3 rounded-lg hover:bg-blue-700"
-            >
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                class="w-5 h-5 mr-3"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                stroke-width="2"
-                stroke-linecap="round"
-                stroke-linejoin="round"
+            </li>
+            <li>
+              <router-link
+                to="/request-drug"
+                class="flex items-center p-3 rounded-lg text-blue-100 hover:bg-blue-700"
+                active-class="bg-blue-600 shadow-md"
+                >Request Obat</router-link
               >
-                <path d="M7 7h10" />
-                <path d="M7 17h10" />
-                <rect x="3" y="3" width="7" height="7" rx="1" />
-                <rect x="14" y="14" width="7" height="7" rx="1" />
-              </svg>
-              Apoteker
-              <span class="ml-auto text-sm">
-                {{ apotekOpen ? "▲" : "▼" }}
-              </span>
-            </button>
+            </li>
 
-            <!-- Submenu hanya Stok Obat -->
-            <ul
-              v-show="apotekOpen"
-              class="ml-6 mt-2 space-y-1 border-l border-blue-600 pl-3"
-            >
-              <li>
-                <router-link
-                  to="/medicine"
-                  class="flex items-center p-2 rounded-lg hover:bg-blue-700"
-                  active-class="bg-blue-600 shadow-md"
-                >
-                  Stok Obat
-                </router-link>
-              </li>
-              <li>
-                <router-link
-                  to="/daftar-permintaan"
-                  class="flex items-center p-2 rounded-lg hover:bg-blue-700"
-                  active-class="bg-blue-600 shadow-md"
-                >
-                  Daftar Permintaan
-                </router-link>
-              </li>
-            </ul>
-          </li>
-
-          <!-- Request Obat -->
-          <li>
-            <router-link
-              to="/request-drug"
-              class="flex items-center p-3 rounded-lg font-medium text-blue-100 hover:bg-blue-700"
-              active-class="bg-blue-600 shadow-md"
-            >
-              <!-- Clipboard + Plus -->
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                class="w-5 h-5 mr-3"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
+            <!-- Submenu Apoteker -->
+            <li>
+              <button
+                @click="apotekOpen = !apotekOpen"
+                class="flex items-center w-full p-3 rounded-lg hover:bg-blue-700"
               >
-                <path
-                  stroke-width="2"
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  d="M12 11v6m3-3H9m2-9h6v4H9V3zM6 5h1a1 1 0 011 1v14a1 1 0 01-1 1H6a1 1 0 01-1-1V6a1 1 0 011-1z"
-                />
-              </svg>
-              Request Obat
-            </router-link>
-          </li>
+                Apoteker
+                <span class="ml-auto text-sm">{{
+                  apotekOpen ? "▲" : "▼"
+                }}</span>
+              </button>
+              <ul
+                v-show="apotekOpen"
+                class="ml-6 mt-2 space-y-1 border-l border-blue-600 pl-3"
+              >
+                <li>
+                  <router-link
+                    to="/medicine"
+                    class="flex items-center p-2 rounded-lg hover:bg-blue-700"
+                    active-class="bg-blue-600 shadow-md"
+                    >Stok Obat</router-link
+                  >
+                </li>
+                <li>
+                  <router-link
+                    to="/daftar-permintaan"
+                    class="flex items-center p-2 rounded-lg hover:bg-blue-700"
+                    active-class="bg-blue-600 shadow-md"
+                    >Daftar Permintaan</router-link
+                  >
+                </li>
+              </ul>
+            </li>
+          </template>
+
+          <!-- Menu Apoteker -->
+          <template v-if="role === 'apotek'">
+            <li>
+              <router-link
+                to="/medicine"
+                class="flex items-center p-3 rounded-lg text-blue-100 hover:bg-blue-700"
+                active-class="bg-blue-600 shadow-md"
+                >Stok Obat</router-link
+              >
+            </li>
+            <li>
+              <router-link
+                to="/daftar-permintaan"
+                class="flex items-center p-3 rounded-lg text-blue-100 hover:bg-blue-700"
+                active-class="bg-blue-600 shadow-md"
+                >Daftar Permintaan</router-link
+              >
+            </li>
+          </template>
         </ul>
       </nav>
     </aside>
 
-    <!-- Overlay untuk mobile -->
+    <!-- Overlay mobile -->
     <div
       v-if="showSidebar && !isDesktop"
       class="fixed inset-0 bg-black opacity-50 z-40"
@@ -261,13 +159,11 @@
           'p-6 sm:p-8': !needsFullLayout,
         }"
       >
-        <!-- Header -->
         <header
           v-if="!needsFullLayout"
           class="flex justify-between items-center mb-6 border-b-4 border-blue-200 pb-3"
         >
           <div class="flex items-center">
-            <!-- Tombol Hamburger mobile -->
             <button @click="showSidebar = !showSidebar" class="lg:hidden mr-3">
               ☰
             </button>
@@ -282,8 +178,6 @@
             🚪 Logout
           </button>
         </header>
-
-        <!-- Konten halaman -->
         <div :class="{ 'min-h-[70vh]': !needsFullLayout }">
           <router-view></router-view>
         </div>
@@ -303,36 +197,30 @@ const route = useRoute();
 const router = useRouter();
 const authStore = useAuthStore();
 
-// SUBMENU APOTEKER
+const role = computed(() => authStore.userRole); // dinamis
+
 const apotekOpen = ref(false);
-
-// Sidebar mobile toggle
 const showSidebar = ref(false);
-
-// Detect desktop (lg ke atas)
 const isDesktop = ref(window.innerWidth >= 1024);
+
 window.addEventListener("resize", () => {
   isDesktop.value = window.innerWidth >= 1024;
   if (isDesktop.value) showSidebar.value = false;
 });
 
-// Layout full atau normal
 const needsFullLayout = computed(() => route.meta.fullLayout === true);
 
-// Logout
 const handleLogout = () => {
   authStore.logout();
   router.push({ name: "Login" });
 };
 
-// Judul halaman
 const pageTitle = computed(
   () => route.meta.documentTitle || "Manajemen Praktik dr. Johan"
 );
 
-// Fetch pasien
 onMounted(() => {
-  if (!needsFullLayout.value) {
+  if (!needsFullLayout.value && role.value === "admin") {
     store.fetchPatients();
   }
 });
