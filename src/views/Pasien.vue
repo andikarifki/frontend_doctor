@@ -12,7 +12,7 @@
 
       <input
         type="text"
-        v-model="searchQuery"
+        v-model="store.searchQuery"
         @input="searchPatientsDebounced"
         placeholder="🔍 Cari NIK atau nama pasien..."
         class="block border-gray-300 rounded-md shadow-sm p-2 text-sm border w-full md:w-1/3 max-w-md focus:ring-indigo-500 focus:border-indigo-500"
@@ -48,19 +48,19 @@
       </thead>
 
       <tbody class="bg-white divide-y divide-gray-200">
-        <tr v-if="loading && !patients.length">
+        <tr v-if="loading && !store.filteredPatients.length">
           <td colspan="6" class="px-4 py-4 text-center text-gray-500 italic">
             Memuat data...
           </td>
         </tr>
-        <tr v-else-if="!patients.length && !loading">
+        <tr v-else-if="!store.filteredPatients.length && !loading">
           <td colspan="6" class="px-4 py-4 text-center text-gray-500 italic">
             Belum ada data pasien.
           </td>
         </tr>
 
         <tr
-          v-for="(pasien, index) in patients"
+          v-for="(pasien, index) in store.filteredPatients"
           :key="pasien.id"
           class="hover:bg-indigo-50 transition duration-100"
         >
@@ -159,63 +159,34 @@
 
 <script setup>
 import { ref, onMounted } from "vue";
-import axios from "axios";
 import { usePasienStore } from "@/stores/pasienStore";
 import { useRouter } from "vue-router";
 import { storeToRefs } from "pinia";
 
 const store = usePasienStore();
 const router = useRouter();
-
-const { patients, loading } = storeToRefs(store);
-const { deletePatient, fetchPatients } = store;
-
-const searchQuery = ref("");
-let searchTimeout = null;
+const { loading } = storeToRefs(store);
 
 const goToCreatePage = () => router.push({ name: "PasienCreate" });
 const goToDetailPage = (id) =>
   router.push({ name: "DetailPasien", params: { id } });
 
-const searchPatients = async () => {
-  const query = searchQuery.value.trim();
-  if (!query) {
-    await fetchPatients();
-    return;
-  }
-  try {
-    store.loading = true;
-    const url = `http://localhost:8000/api/pasien/search/${encodeURIComponent(
-      query
-    )}`;
-    const res = await axios.get(url);
-    store.patients = res.data.data || res.data;
-  } catch (err) {
-    console.error("Gagal mencari pasien:", err);
-    store.patients = [];
-  } finally {
-    store.loading = false;
-  }
-};
-
+let searchTimeout = null;
 const searchPatientsDebounced = () => {
   if (searchTimeout) clearTimeout(searchTimeout);
-  searchTimeout = setTimeout(() => searchPatients(), 300);
+  searchTimeout = setTimeout(() => store.searchPatients(), 300);
 };
 
-onMounted(fetchPatients);
+onMounted(() => store.fetchPatients());
 
 const handleDeleteConfirmation = (id, nama) => {
   if (confirm(`[KONFIRMASI HAPUS] Hapus Pasien: ${nama} (ID: ${id})?`)) {
-    deletePatient(id).then(() => fetchPatients());
+    store.deletePatient(id);
   }
 };
 
 const handleWhatsapp = (number) => {
-  if (!number) {
-    alert("Nomor WhatsApp tidak tersedia.");
-    return;
-  }
+  if (!number) return alert("Nomor WhatsApp tidak tersedia.");
   const phone = number.replace(/^0/, "62");
   const text = encodeURIComponent(
     "Halo, saya dari klinik. Ada yang perlu dikonfirmasi."
