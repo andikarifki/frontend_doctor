@@ -27,18 +27,18 @@ export const useAuthStore = defineStore("auth", {
         const token = response.data.access_token;
         const role = response.data.role;
 
-        // simpan token
+        // Simpan token
         this.authToken = token;
         localStorage.setItem("authToken", token);
 
-        // simpan user sementara dulu (role saja)
+        // Simpan role awal dari login
         this.user = { role };
         localStorage.setItem("user", JSON.stringify(this.user));
 
-        // ambil detail user lengkap
+        // Ambil detail user
         await this.fetchUser();
 
-        // redirect sesuai role
+        // Arahkan ke halaman sesuai role
         if (role === "admin") {
           router.push("/dashboard");
         } else if (role === "apotek") {
@@ -48,21 +48,17 @@ export const useAuthStore = defineStore("auth", {
         }
 
         return true;
-
       } catch (err) {
-        // ★★ INI BAGIAN PENTING ★★
         this.error =
           err.response?.data?.message || "Username atau password salah!";
 
-        // login gagal → JANGAN logout otomatis
-        // cukup hapus token saja supaya tidak salah redirect
+        // Jangan logout, cukup bersihkan token yang salah
         this.authToken = null;
         this.user = null;
         localStorage.removeItem("authToken");
         localStorage.removeItem("user");
 
         return false;
-
       } finally {
         this.loading = false;
       }
@@ -74,16 +70,18 @@ export const useAuthStore = defineStore("auth", {
       try {
         const response = await api.get("/user");
 
+        // Gabungkan data existing + response
         this.user = {
           ...response.data,
           role: this.user?.role || response.data.role,
         };
 
         localStorage.setItem("user", JSON.stringify(this.user));
-
       } catch (err) {
         console.error("Token invalid, auto logout");
-        this.logout();
+
+        // Kalau token invalid → logout otomatis
+        this.logout(); 
       }
     },
 
@@ -96,7 +94,7 @@ export const useAuthStore = defineStore("auth", {
       localStorage.removeItem("authToken");
       localStorage.removeItem("user");
 
-      if (redirect) router.push("/login");
+      if (redirect) router.push("/");
     },
   },
 });

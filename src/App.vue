@@ -6,23 +6,19 @@
       class="fixed inset-y-0 left-0 w-64 bg-blue-800 text-white p-4 shadow-2xl z-50 transform transition-transform duration-300 lg:relative lg:translate-x-0"
       :class="{ '-translate-x-full': !showSidebar && !isDesktop }"
     >
-      <!-- Profil -->
+      <!-- Profil (tanpa foto) -->
       <div class="mb-8 p-2">
         <div class="flex items-center">
-          <img
-            src="https://img.okadoc.com/plain/200x200/photos/practitioner/photo/73503/okadoc-doctor-psychiatrist-johan-kurniawan-20200420165834.jpg"
-            alt="Foto Dr. Johan"
-            class="w-14 h-14 rounded-full object-cover shadow-xl border-2 border-blue-400 mr-3 flex-shrink-0"
-          />
-          <div class="text-left overflow-hidden">
-            <h1 class="text-lg font-extrabold text-blue-100 truncate">
-              dr. Johan
+          <div class="text-left">
+            <h1 class="text-xl font-extrabold text-blue-100">
+              {{ authStore.user?.name || "User" }}
             </h1>
-            <p class="text-blue-300 text-xs mt-0.5 whitespace-nowrap">
-              Spesialis Kedokteran Jiwa
+            <p class="text-blue-300 text-xs mt-1 capitalize">
+              {{ role }}
             </p>
           </div>
         </div>
+
         <div class="mt-4 border-b border-blue-600 pb-2"></div>
       </div>
 
@@ -33,6 +29,7 @@
         >
           Menu Utama
         </h2>
+
         <ul class="space-y-1">
           <!-- Menu Admin -->
           <template v-if="role === 'admin'">
@@ -44,6 +41,7 @@
                 >Halaman Utama</router-link
               >
             </li>
+
             <li>
               <router-link
                 to="/pasien"
@@ -52,6 +50,7 @@
                 >Pasien</router-link
               >
             </li>
+
             <li>
               <router-link
                 to="/praktik"
@@ -60,6 +59,7 @@
                 >Daftar Praktik</router-link
               >
             </li>
+
             <li>
               <router-link
                 to="/pasien-praktik"
@@ -68,6 +68,7 @@
                 >Daftar Pasien Berobat</router-link
               >
             </li>
+
             <li>
               <router-link
                 to="/medical-record"
@@ -76,6 +77,7 @@
                 >Riwayat Medis</router-link
               >
             </li>
+
             <li>
               <router-link
                 to="/request-drug"
@@ -92,10 +94,11 @@
                 class="flex items-center w-full p-3 rounded-lg hover:bg-blue-700"
               >
                 Apoteker
-                <span class="ml-auto text-sm">{{
-                  apotekOpen ? "▲" : "▼"
-                }}</span>
+                <span class="ml-auto text-sm">
+                  {{ apotekOpen ? "▲" : "▼" }}
+                </span>
               </button>
+
               <ul
                 v-show="apotekOpen"
                 class="ml-6 mt-2 space-y-1 border-l border-blue-600 pl-3"
@@ -108,6 +111,7 @@
                     >Stok Obat</router-link
                   >
                 </li>
+
                 <li>
                   <router-link
                     to="/daftar-permintaan"
@@ -130,6 +134,7 @@
                 >Stok Obat</router-link
               >
             </li>
+
             <li>
               <router-link
                 to="/daftar-permintaan"
@@ -171,13 +176,15 @@
               {{ pageTitle }}
             </h1>
           </div>
+
           <button
-            @click="handleLogout"
+            @click="authStore.logout()"
             class="bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-4 rounded transition text-sm"
           >
             🚪 Logout
           </button>
         </header>
+
         <div :class="{ 'min-h-[70vh]': !needsFullLayout }">
           <router-view></router-view>
         </div>
@@ -188,40 +195,35 @@
 
 <script setup>
 import { ref, computed, onMounted } from "vue";
-import { useRoute, useRouter } from "vue-router";
-import { usePasienStore } from "@/stores/pasienStore";
+import { useRoute } from "vue-router";
 import { useAuthStore } from "@/stores/auth";
 
-const store = usePasienStore();
 const route = useRoute();
-const router = useRouter();
 const authStore = useAuthStore();
 
-const role = computed(() => authStore.userRole); // dinamis
-
+const role = computed(() => authStore.userRole);
 const apotekOpen = ref(false);
 const showSidebar = ref(false);
 const isDesktop = ref(window.innerWidth >= 1024);
 
+// Responsive sidebar
 window.addEventListener("resize", () => {
   isDesktop.value = window.innerWidth >= 1024;
   if (isDesktop.value) showSidebar.value = false;
 });
 
+// Check layout
 const needsFullLayout = computed(() => route.meta.fullLayout === true);
 
-const handleLogout = () => {
-  authStore.logout();
-  router.push({ name: "Login" });
-};
-
+// Title
 const pageTitle = computed(
   () => route.meta.documentTitle || "Manajemen Praktik dr. Johan"
 );
 
+// AUTO FETCH USER setelah refresh
 onMounted(() => {
-  if (!needsFullLayout.value && role.value === "admin") {
-    store.fetchPatients();
+  if (authStore.isAuthenticated && !authStore.user) {
+    authStore.fetchUser();
   }
 });
 </script>
