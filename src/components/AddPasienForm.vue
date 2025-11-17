@@ -39,8 +39,6 @@
           class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-3 focus:ring-blue-500 focus:border-blue-500"
         />
       </div>
-
-      <!-- Nama -->
       <div>
         <label for="nama" class="block text-sm font-medium text-gray-700"
           >Nama Lengkap</label
@@ -50,12 +48,10 @@
           id="nama"
           v-model="form.nama"
           required
-          placeholder="Contoh: Dika Rifqi"
+          placeholder="Masukkan Nama"
           class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-3 focus:ring-blue-500 focus:border-blue-500"
         />
       </div>
-
-      <!-- Tanggal -->
       <div>
         <label for="tanggal" class="block text-sm font-medium text-gray-700"
           >Tanggal Lahir</label
@@ -65,6 +61,19 @@
           id="tanggal"
           v-model="form.tanggal"
           required
+          class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-3 focus:ring-blue-500 focus:border-blue-500"
+        />
+      </div>
+      <div>
+        <label for="no_tlp" class="block text-sm font-medium text-gray-700"
+          >No Telepon</label
+        >
+        <input
+          type="text"
+          id="no_tlp"
+          v-model="form.no_tlp"
+          required
+          placeholder="Masukkan Nomor Telepon"
           class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-3 focus:ring-blue-500 focus:border-blue-500"
         />
       </div>
@@ -94,6 +103,7 @@ const form = ref({
   nama: "",
   tanggal: new Date().toISOString().substring(0, 10),
   status: "Aktif",
+  no_tlp: "",
 });
 
 // 🔔 State feedback API
@@ -118,7 +128,7 @@ const resetForm = () => {
     nama: "",
     tanggal: new Date().toISOString().substring(0, 10),
     status: "Aktif",
-    praktik_id: "",
+    no_tlp: "",
   };
   validationErrors.value = [];
 };

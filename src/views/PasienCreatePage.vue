@@ -2,7 +2,7 @@
   <div class="min-h-screen bg-gray-100 p-4 sm:p-6 lg:p-8">
     <div class="max-w-3xl mx-auto bg-white p-6 sm:p-8 rounded-xl shadow-2xl">
       <router-link
-        :to="{ name: 'Dashboard' }"
+        :to="{ name: 'Pasien' }"
         class="inline-block mb-6 bg-gray-500 hover:bg-gray-600 text-white font-bold py-2 px-4 rounded transition text-sm"
       >
         ← Kembali ke Dashboard
