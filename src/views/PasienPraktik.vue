@@ -15,23 +15,24 @@
       <!-- Tengah: Pilihan praktik -->
       <div class="flex items-center gap-3 w-full md:w-auto">
         <label for="praktik" class="whitespace-nowrap">Pilih Praktik:</label>
+
         <select
           id="praktik"
-          v-model="selectedPraktikId"
-          @change="fetchPasiens"
+          v-model="store.selectedPraktikId"
+          @change="store.fetchPasiens"
           class="border rounded px-3 py-2 w-full md:w-auto"
         >
           <option value="">-- Pilih praktik --</option>
-          <option v-for="p in praktiks" :key="p.id" :value="p.id">
+          <option v-for="p in store.praktiks" :key="p.id" :value="p.id">
             {{ p.nama || p.lokasi_praktik || "Praktik " + p.id }}
           </option>
         </select>
       </div>
     </div>
 
-    <!-- 🔸 Loading di tengah layar -->
+    <!-- 🔸 Loading overlay -->
     <div
-      v-if="loading"
+      v-if="store.loading"
       class="absolute inset-0 flex items-center justify-center bg-white/60 backdrop-blur-sm z-10"
     >
       <div class="text-gray-700 font-medium italic animate-pulse">
@@ -40,16 +41,21 @@
     </div>
 
     <!-- 🔹 Pesan error -->
-    <div v-if="error" class="mb-4 text-red-600">{{ error }}</div>
+    <div v-if="store.error" class="mb-4 text-red-600">
+      {{ store.error }}
+    </div>
 
     <!-- 🔹 Info awal -->
-    <div v-if="!selectedPraktikId && !loading" class="text-gray-600">
+    <div
+      v-if="!store.selectedPraktikId && !store.loading"
+      class="text-gray-600"
+    >
       Silakan pilih praktik untuk melihat daftar pasien.
     </div>
 
     <!-- 🔹 Tabel data pasien -->
     <table
-      v-if="selectedPraktikId && pasiens.length && !loading"
+      v-if="store.selectedPraktikId && store.pasiens.length && !store.loading"
       class="min-w-full border-collapse shadow rounded overflow-hidden"
     >
       <thead class="bg-gray-100 text-left">
@@ -65,21 +71,22 @@
       </thead>
       <tbody>
         <tr
-          v-for="pasien in pasiens"
+          v-for="pasien in store.pasiens"
           :key="pasien.id"
           class="odd:bg-white even:bg-gray-50"
         >
           <td class="px-3 py-2">{{ pasien.id }}</td>
           <td class="px-3 py-2">{{ pasien.nik }}</td>
           <td class="px-3 py-2">{{ pasien.nama }}</td>
-          <td class="px-3 py-2">{{ formatDate(pasien.tanggal) }}</td>
+          <td class="px-3 py-2">{{ store.formatDate(pasien.tanggal) }}</td>
           <td class="px-3 py-2">{{ pasien.status }}</td>
           <td class="px-3 py-2">
-            {{ formatDate(pasien.pivot?.tanggal_daftar) || "-" }}
+            {{ store.formatDate(pasien.pivot?.tanggal_daftar) || "-" }}
           </td>
+
           <td class="px-3 py-2 text-center">
             <button
-              @click="hapusPasien(pasien.id)"
+              @click="store.hapusPasien(pasien.id)"
               class="bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded text-sm"
             >
               🗑️ Hapus
@@ -91,7 +98,9 @@
 
     <!-- 🔹 Pesan kosong -->
     <div
-      v-else-if="selectedPraktikId && !loading && !pasiens.length"
+      v-else-if="
+        store.selectedPraktikId && !store.loading && !store.pasiens.length
+      "
       class="text-gray-600"
     >
       Tidak ada pasien untuk praktik terpilih.
@@ -100,87 +109,19 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from "vue";
-import axios from "axios";
+import { onMounted } from "vue";
 import { useRouter } from "vue-router";
+import { usePraktikPasienStore } from "../stores/usePraktikPasienStore";
 
 const router = useRouter();
-const BASE_API = import.meta.env.VITE_API_BASE || "http://127.0.0.1:8000/api";
-const praktiks = ref([]);
-const pasiens = ref([]);
-const selectedPraktikId = ref("");
-const loading = ref(false);
-const error = ref("");
+const store = usePraktikPasienStore();
 
 const goToCreatePage = () => {
   router.push({ name: "CreatePraktikPasien" });
 };
 
-async function fetchPraktiks() {
-  loading.value = true;
-  error.value = "";
-  try {
-    const res = await axios.get(`${BASE_API}/praktik/semua`);
-    praktiks.value = res.data?.data || res.data || [];
-  } catch (err) {
-    console.error(err);
-    error.value = "Gagal mengambil daftar praktik. Cek koneksi / endpoint.";
-  } finally {
-    loading.value = false;
-  }
-}
-
-async function fetchPasiens() {
-  if (!selectedPraktikId.value) {
-    pasiens.value = [];
-    return;
-  }
-  loading.value = true;
-  error.value = "";
-  try {
-    const res = await axios.get(
-      `${BASE_API}/praktik/${selectedPraktikId.value}/pasiens`
-    );
-    pasiens.value = res.data?.data || res.data || [];
-  } catch (err) {
-    console.error(err);
-    error.value = "Gagal mengambil daftar pasien. Pastikan API berjalan.";
-    pasiens.value = [];
-  } finally {
-    loading.value = false;
-  }
-}
-
-async function hapusPasien(pasienId) {
-  if (!selectedPraktikId.value) return;
-  if (!confirm("Yakin ingin menghapus pasien ini dari praktik?")) return;
-
-  try {
-    await axios.delete(
-      `${BASE_API}/praktik/${selectedPraktikId.value}/pasien/${pasienId}`
-    );
-    await fetchPasiens();
-  } catch (err) {
-    console.error(err);
-    alert("Gagal menghapus pasien dari praktik.");
-  }
-}
-
-function formatDate(d) {
-  if (!d) return "-";
-  try {
-    return new Date(d).toLocaleDateString("id-ID", {
-      year: "numeric",
-      month: "long",
-      day: "numeric",
-    });
-  } catch {
-    return d;
-  }
-}
-
-onMounted(async () => {
-  await fetchPraktiks();
+onMounted(() => {
+  store.fetchPraktiks();
 });
 </script>
 
