@@ -56,15 +56,13 @@
 
 <script setup>
 import { ref, onMounted } from "vue";
-import axios from "axios";
+import api from "../api/axios"; // instance Axios dengan baseURL
 
 const requests = ref([]);
 
 const fetchRequests = async () => {
   try {
-    const res = await axios.get(
-      "http://127.0.0.1:8000/api/request-obat-internal"
-    );
+    const res = await api.get("/request-obat-internal");
     if (res.data.success) requests.value = res.data.data;
   } catch (err) {
     console.error("Gagal mengambil request:", err);
@@ -74,9 +72,7 @@ const fetchRequests = async () => {
 const approveRequest = async (id) => {
   if (!confirm("Setujui permintaan ini?")) return;
   try {
-    await axios.patch(
-      `http://127.0.0.1:8000/api/request-obat-internal/${id}/approve`
-    );
+    await api.patch(`/request-obat-internal/${id}/approve`);
     const r = requests.value.find((r) => r.id === id);
     if (r) r.status = "approved";
     alert("Permintaan disetujui dan stok dikurangi");
@@ -89,14 +85,12 @@ const approveRequest = async (id) => {
 const rejectRequest = async (id) => {
   if (!confirm("Tolak permintaan ini?")) return;
   try {
-    await axios.patch(
-      `http://127.0.0.1:8000/api/request-obat-internal/${id}/reject`
-    );
+    await api.patch(`/request-obat-internal/${id}/reject`);
     const r = requests.value.find((r) => r.id === id);
     if (r) r.status = "rejected";
   } catch (err) {
     console.error(err);
-    alert("Gagal reject permintaan");
+    alert(err.response?.data?.message || "Gagal reject permintaan");
   }
 };
 
