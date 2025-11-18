@@ -12,7 +12,7 @@
         class="border border-gray-300 rounded-lg p-2 w-full focus:ring focus:ring-blue-300"
       >
         <option disabled value="">-- Pilih Pasien --</option>
-        <option v-for="p in pasienList" :key="p.id" :value="p.id">
+        <option v-for="p in pasienStore.patients" :key="p.id" :value="p.id">
           {{ p.nama }}
         </option>
       </select>
@@ -67,11 +67,16 @@
             class="border p-2 rounded w-full"
           >
             <option disabled value="">-- Pilih Praktik --</option>
-            <option v-for="p in daftarPraktik" :key="p.id" :value="p.id">
+            <option
+              v-for="p in praktikStore.praktikList"
+              :key="p.id"
+              :value="p.id"
+            >
               {{ p.lokasi_praktik }}
             </option>
           </select>
         </div>
+
         <div class="flex space-x-2">
           <button
             type="submit"
@@ -90,15 +95,15 @@
       </form>
     </div>
 
-    <!-- Loading -->
-    <div v-if="loading" class="text-center py-6 text-gray-500">
+    <!-- Loading State -->
+    <div v-if="medicalStore.loading" class="text-center py-6 text-gray-500">
       Memuat data rekam medis...
     </div>
 
-    <!-- Tabel data rekam medis -->
+    <!-- Tabel Rekam Medis -->
     <div v-else>
       <table
-        v-if="records.length"
+        v-if="medicalStore.records.length"
         class="w-full border-collapse border border-gray-300 rounded-lg overflow-hidden"
       >
         <thead class="bg-blue-600 text-white">
@@ -112,7 +117,7 @@
         </thead>
         <tbody>
           <tr
-            v-for="record in records"
+            v-for="record in medicalStore.records"
             :key="record.id"
             class="hover:bg-gray-50 transition"
           >
@@ -143,14 +148,17 @@
 
 <script setup>
 import { ref, onMounted } from "vue";
-import axios from "axios";
+import { useMedicalRecordStore } from "../stores/medicalRecordStore";
+import { usePasienStore } from "../stores/pasienStore";
+import { usePraktikStore } from "../stores/PraktikStore";
 
-const pasienList = ref([]);
+const medicalStore = useMedicalRecordStore();
+const pasienStore = usePasienStore();
+const praktikStore = usePraktikStore();
+
+// Local state
 const selectedPasienId = ref("");
-const records = ref([]);
-const daftarPraktik = ref([]);
 const showForm = ref(false);
-const loading = ref(false);
 
 const form = ref({
   tanggal_periksa: "",
@@ -159,63 +167,43 @@ const form = ref({
   praktik_id: "",
 });
 
-const API_BASE = "http://127.0.0.1:8000/api";
-
-// Ambil daftar pasien
+// Fetch Pasien (pakai store)
 const fetchPasiens = async () => {
-  try {
-    const res = await axios.get(`${API_BASE}/pasien`);
-    pasienList.value = res.data.data || [];
-  } catch (err) {
-    console.error("Gagal memuat pasien:", err);
-  }
+  await pasienStore.fetchPatients();
 };
 
-// Ambil daftar praktik
+// Fetch praktik
 const fetchDaftarPraktik = async () => {
-  try {
-    const res = await axios.get(`${API_BASE}/pendaftaran-praktik`);
-    daftarPraktik.value = res.data.data || [];
-  } catch (err) {
-    console.error("Gagal memuat praktik:", err);
-  }
+  await praktikStore.fetchPraktikList();
 };
 
-// Ambil rekam medis pasien
-const fetchMedicalRecords = async () => {
-  if (!selectedPasienId.value) return;
-  loading.value = true;
-  records.value = [];
-  try {
-    const res = await axios.get(
-      `${API_BASE}/pasien/${selectedPasienId.value}/medical-records`
-    );
-    records.value = res.data.data || [];
-  } catch (err) {
-    console.error("Gagal memuat rekam medis:", err);
-  } finally {
-    loading.value = false;
+// Fetch medical records
+const fetchMedicalRecords = () => {
+  if (selectedPasienId.value) {
+    medicalStore.fetchMedicalRecords(selectedPasienId.value);
   }
 };
 
 // Tambah rekam medis
 const tambahRecord = async () => {
   try {
-    const payload = {
-      pasien_id: selectedPasienId.value,
-      ...form.value,
-    };
-    const res = await axios.post(`${API_BASE}/medical-records`, payload);
-    if (res.data.success) {
+    const res = await medicalStore.tambahRecord(
+      form.value,
+      selectedPasienId.value
+    );
+
+    if (res.success) {
+      alert("Riwayat medis berhasil ditambahkan!");
       showForm.value = false;
+
       form.value = {
         tanggal_periksa: "",
         diagnosis: "",
         obat: "",
         praktik_id: "",
       };
+
       fetchMedicalRecords();
-      alert("Riwayat medis berhasil ditambahkan!");
     }
   } catch (err) {
     console.error(err);
@@ -225,9 +213,9 @@ const tambahRecord = async () => {
 
 // Hapus rekam medis
 const hapusRecord = async (id) => {
-  if (!confirm("Apakah yakin ingin menghapus rekam medis ini?")) return;
+  if (!confirm("Yakin mau hapus?")) return;
   try {
-    await axios.delete(`${API_BASE}/medical-records/${id}`);
+    await medicalStore.hapusRecord(id);
     alert("Rekam medis berhasil dihapus!");
     fetchMedicalRecords();
   } catch (err) {
