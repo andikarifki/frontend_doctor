@@ -9,7 +9,7 @@
 
     <RequestObatModal
       :show="showModal"
-      :obat="obat"
+      :obat="obatStore.stokObat"
       @close="showModal = false"
       @success="fetchRiwayat"
     />
@@ -66,19 +66,15 @@
 import { ref, onMounted } from "vue";
 import api from "../api/axios";
 import RequestObatModal from "../components/RequestObatModal.vue";
+import { useObatStore } from "../stores/useObatStore";
 
 const showModal = ref(false);
-const obat = ref([]);
+const obatStore = useObatStore();
 const riwayat = ref([]);
 
 // Ambil stok obat
 const fetchObat = async () => {
-  try {
-    const res = await api.get("/stok-obat");
-    if (res.data.success) obat.value = res.data.data;
-  } catch (err) {
-    console.error("Gagal mengambil stok obat:", err);
-  }
+  await obatStore.fetchStokObat(); // ambil stok obat dari store
 };
 
 // Ambil riwayat request
