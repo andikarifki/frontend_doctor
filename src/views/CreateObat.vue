@@ -107,12 +107,17 @@
 </template>
 
 <script setup>
-import { reactive } from "vue";
+import { reactive, onMounted } from "vue";
 import { useRouter } from "vue-router";
 import { useObatStore } from "@/stores/useObatStore";
 
 const router = useRouter();
 const obatStore = useObatStore();
+
+// Reset pesan tiap buka halaman
+onMounted(() => {
+  obatStore.message = "";
+});
 
 const form = reactive({
   nama_obat: "",
@@ -124,6 +129,16 @@ const form = reactive({
   keterangan: "",
 });
 
+const resetForm = () => {
+  form.nama_obat = "";
+  form.stok = 0;
+  form.satuan = "";
+  form.kategori = "";
+  form.expired_date = "";
+  form.harga = 0;
+  form.keterangan = "";
+};
+
 const submitForm = async () => {
   if (!form.nama_obat || form.stok < 0) {
     alert("Nama obat dan stok wajib diisi.");
@@ -133,9 +148,11 @@ const submitForm = async () => {
   const success = await obatStore.createObat(form);
 
   if (success) {
+    resetForm();
+
     setTimeout(() => {
       router.push("/medicine");
-    }, 1000);
+    }, 900);
   }
 };
 </script>
