@@ -65,7 +65,7 @@
 <script setup>
 import { ref, onMounted } from "vue";
 import api from "../api/axios";
-import RequestObatModal from "./RequestObatModal.vue";
+import RequestObatModal from "../components/RequestObatModal.vue";
 
 const showModal = ref(false);
 const obat = ref([]);
