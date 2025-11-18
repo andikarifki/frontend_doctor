@@ -122,7 +122,7 @@
 
 <script setup>
 import { ref, onMounted } from "vue";
-import axios from "axios";
+import api from "../api/axios"; // import instance Axios
 
 const showModal = ref(false);
 const obat = ref([]);
@@ -135,7 +135,7 @@ const riwayat = ref([]);
 // Ambil stok obat
 const fetchObat = async () => {
   try {
-    const res = await axios.get("http://127.0.0.1:8000/api/stok-obat");
+    const res = await api.get("/stok-obat");
     if (res.data.success) obat.value = res.data.data;
   } catch (err) {
     console.error("Gagal mengambil stok obat:", err);
@@ -145,9 +145,7 @@ const fetchObat = async () => {
 // Ambil riwayat request
 const fetchRiwayat = async () => {
   try {
-    const res = await axios.get(
-      "http://127.0.0.1:8000/api/request-obat-internal"
-    );
+    const res = await api.get("/request-obat-internal");
     if (res.data.success) {
       riwayat.value = res.data.data.map((r) => ({
         ...r,
@@ -177,14 +175,10 @@ const kirimRequest = async () => {
   };
 
   try {
-    const res = await axios.post(
-      "http://127.0.0.1:8000/api/request-obat-internal",
-      payload
-    );
+    const res = await api.post("/request-obat-internal", payload);
     if (res.data.success) {
       alert("Permintaan berhasil dikirim");
       fetchRiwayat();
-      // reset form & tutup modal
       obat_id.value = "";
       jumlah.value = 1;
       tanggal.value = "";
@@ -201,7 +195,7 @@ const kirimRequest = async () => {
 const cancelRequest = async (id) => {
   if (!confirm("Batalkan permintaan ini?")) return;
   try {
-    await axios.delete(`http://127.0.0.1:8000/api/request-obat-internal/${id}`);
+    await api.delete(`/request-obat-internal/${id}`);
     riwayat.value = riwayat.value.filter((r) => r.id !== id);
   } catch (err) {
     console.error(err);
