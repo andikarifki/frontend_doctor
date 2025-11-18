@@ -1,73 +1,120 @@
+<template>
+  <div
+    v-if="show"
+    class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
+  >
+    <div class="bg-white p-6 rounded shadow-lg w-full max-w-md relative">
+      <!-- Close Button -->
+      <button
+        @click="$emit('close')"
+        class="absolute top-2 right-2 text-gray-600 hover:text-gray-900"
+      >
+        ✕
+      </button>
+
+      <h2 class="text-lg font-semibold mb-4">Form Request Obat</h2>
+
+      <div class="grid grid-cols-1 gap-3">
+        <div>
+          <label class="block mb-1">Pilih Obat</label>
+          <select v-model="obat_id" class="border rounded w-full px-2 py-1">
+            <option value="">-- Pilih Obat --</option>
+            <option v-for="o in obat" :key="o.id" :value="o.id">
+              {{ o.nama_obat }} (stok: {{ o.stok }})
+            </option>
+          </select>
+        </div>
+
+        <div>
+          <label class="block mb-1">Jumlah</label>
+          <input
+            type="number"
+            v-model.number="jumlah"
+            min="1"
+            class="border rounded w-full px-2 py-1"
+          />
+        </div>
+
+        <div>
+          <label class="block mb-1">Tanggal (Opsional)</label>
+          <input
+            type="date"
+            v-model="tanggal"
+            class="border rounded w-full px-2 py-1"
+          />
+        </div>
+
+        <div>
+          <label class="block mb-1">Keterangan (Opsional)</label>
+          <input
+            type="text"
+            v-model="keterangan"
+            class="border rounded w-full px-2 py-1"
+            placeholder="Catatan tambahan"
+          />
+        </div>
+      </div>
+
+      <button
+        @click="submitRequest"
+        class="mt-4 bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700 w-full"
+      >
+        Kirim Permintaan
+      </button>
+    </div>
+  </div>
+</template>
+
 <script setup>
-import { ref, onMounted } from "vue";
-import api from "@/api/axios"; // ganti axios biasa dengan instance
+import { ref, watch } from "vue";
+import api from "../api/axios";
 
-const showModal = ref(false);
-const obat = ref([]);
-const riwayat = ref([]);
-
-// Ambil stok obat
-const fetchObat = async () => {
-  try {
-    const res = await api.get("/stok-obat");
-    if (res.data.success) obat.value = res.data.data;
-  } catch (err) {
-    console.error("Gagal mengambil stok obat:", err);
-  }
-};
-
-// Ambil riwayat request
-const fetchRiwayat = async () => {
-  try {
-    const res = await api.get("/request-obat-internal");
-    if (res.data.success) {
-      riwayat.value = res.data.data.map((r) => ({
-        ...r,
-        status: r.status.toLowerCase(),
-      }));
-    }
-  } catch (err) {
-    console.error("Gagal mengambil riwayat:", err);
-  }
-};
-
-onMounted(() => {
-  fetchObat();
-  fetchRiwayat();
+const props = defineProps({
+  show: Boolean,
+  obat: Array,
 });
 
-// Kirim request
-const kirimRequest = async (payload) => {
+const emit = defineEmits(["close", "success"]);
+
+const obat_id = ref("");
+const jumlah = ref(1);
+const tanggal = ref("");
+const keterangan = ref("");
+
+// Reset form ketika modal dibuka
+watch(
+  () => props.show,
+  (newVal) => {
+    if (newVal) {
+      obat_id.value = "";
+      jumlah.value = 1;
+      tanggal.value = "";
+      keterangan.value = "";
+    }
+  }
+);
+
+const submitRequest = async () => {
+  if (!obat_id.value || jumlah.value < 1)
+    return alert("Pilih obat dan jumlah minimal 1");
+
+  const payload = {
+    obat_id: obat_id.value,
+    jumlah: jumlah.value,
+    tanggal: tanggal.value || null,
+    keterangan: keterangan.value || null,
+  };
+
   try {
     const res = await api.post("/request-obat-internal", payload);
     if (res.data.success) {
       alert("Permintaan berhasil dikirim");
-      fetchRiwayat();
-      showModal.value = false;
+      emit("success"); // kasih tahu parent untuk refresh riwayat
+      emit("close");
     }
   } catch (err) {
     console.error(err);
     alert("Terjadi kesalahan saat mengirim permintaan");
   }
 };
-
-// Cancel request
-const cancelRequest = async (id) => {
-  if (!confirm("Batalkan permintaan ini?")) return;
-  try {
-    await api.delete(`/request-obat-internal/${id}`);
-    riwayat.value = riwayat.value.filter((r) => r.id !== id);
-  } catch (err) {
-    console.error(err);
-    alert("Gagal membatalkan permintaan");
-  }
-};
-
-// Warna status
-const warnaStatus = (status) =>
-  ({
-    approved: "text-green-600",
-    pending: "text-yellow-600",
-    rejected: "text-red-600",
-  }[status]);
 </script>
