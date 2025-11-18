@@ -1,7 +1,5 @@
 <template>
   <div class="p-6 max-w-2xl mx-auto bg-white shadow rounded">
-    <h1 class="text-2xl font-bold mb-4">Tambah Obat Baru</h1>
-
     <div class="grid grid-cols-1 gap-4">
       <!-- Nama Obat -->
       <div>
@@ -79,14 +77,16 @@
         ></textarea>
       </div>
 
-      <!-- Tombol Simpan -->
-      <div class="flex gap-2">
+      <!-- Tombol -->
+      <div class="flex gap-2 mt-2">
         <button
           @click="submitForm"
-          class="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700"
+          :disabled="obatStore.loading"
+          class="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700 disabled:opacity-60"
         >
-          Simpan
+          {{ obatStore.loading ? "Menyimpan..." : "Simpan" }}
         </button>
+
         <router-link
           to="/medicine"
           class="bg-gray-500 text-white px-4 py-2 rounded hover:bg-gray-600"
@@ -96,18 +96,23 @@
       </div>
     </div>
 
-    <div v-if="message" class="mt-4 p-2 bg-green-100 text-green-700 rounded">
-      {{ message }}
+    <!-- Pesan sukses -->
+    <div
+      v-if="obatStore.message"
+      class="mt-4 p-2 bg-green-100 text-green-700 rounded text-center font-semibold"
+    >
+      {{ obatStore.message }}
     </div>
   </div>
 </template>
 
 <script setup>
-import { reactive, ref } from "vue";
-import { useRouter } from "vue-router"; // <-- wajib import
-import axios from "axios";
+import { reactive } from "vue";
+import { useRouter } from "vue-router";
+import { useObatStore } from "@/stores/useObatStore";
 
-const router = useRouter(); // <-- buat router instance
+const router = useRouter();
+const obatStore = useObatStore();
 
 const form = reactive({
   nama_obat: "",
@@ -119,26 +124,18 @@ const form = reactive({
   keterangan: "",
 });
 
-const message = ref("");
-
 const submitForm = async () => {
   if (!form.nama_obat || form.stok < 0) {
     alert("Nama obat dan stok wajib diisi.");
     return;
   }
 
-  try {
-    const response = await axios.post(
-      "http://127.0.0.1:8000/api/stok-obat",
-      form
-    );
-    if (response.data.success) {
-      // setelah berhasil, langsung pindah ke daftar stok obat
+  const success = await obatStore.createObat(form);
+
+  if (success) {
+    setTimeout(() => {
       router.push("/medicine");
-    }
-  } catch (error) {
-    console.error("Gagal menambahkan obat:", error);
-    alert("Terjadi kesalahan saat menyimpan data.");
+    }, 1000);
   }
 };
 </script>

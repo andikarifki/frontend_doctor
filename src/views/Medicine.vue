@@ -1,5 +1,6 @@
 <template>
   <div class="p-6 max-w-5xl mx-auto">
+    <!-- Tombol Tambah Obat -->
     <div class="mb-4">
       <router-link
         to="/medicine/tambah"
@@ -9,6 +10,7 @@
       </router-link>
     </div>
 
+    <!-- Tabel -->
     <div class="overflow-x-auto">
       <table class="w-full border-collapse border shadow rounded">
         <thead class="bg-gray-200">
@@ -23,8 +25,21 @@
             <th class="border px-3 py-2">Aksi</th>
           </tr>
         </thead>
+
         <tbody>
-          <tr v-for="obat in stokObat" :key="obat.id" class="hover:bg-gray-100">
+          <!-- Loading -->
+          <tr v-if="obatStore.loading">
+            <td colspan="8" class="text-center py-4 text-gray-500">
+              Memuat data...
+            </td>
+          </tr>
+
+          <!-- Data -->
+          <tr
+            v-for="obat in obatStore.stokObat"
+            :key="obat.id"
+            class="hover:bg-gray-100"
+          >
             <td class="border px-3 py-2 text-center">{{ obat.id }}</td>
             <td class="border px-3 py-2">{{ obat.nama_obat }}</td>
             <td class="border px-3 py-2 text-center">{{ obat.stok }}</td>
@@ -34,10 +49,11 @@
               {{ obat.expired_date }}
             </td>
             <td class="border px-3 py-2 text-right">{{ obat.harga }}</td>
+
             <td class="border px-3 py-2 text-center flex justify-center">
               <button
-                @click="hapusObat(obat.id)"
-                class="bg-red-600 hover:bg-red-700 text-white py-1 px-2 rounded transition flex items-center justify-center"
+                @click="hapus(obat.id)"
+                class="bg-red-600 hover:bg-red-700 text-white py-1 px-2 rounded flex items-center justify-center"
                 title="Hapus Obat"
               >
                 <svg
@@ -58,7 +74,8 @@
             </td>
           </tr>
 
-          <tr v-if="stokObat.length === 0">
+          <!-- Jika kosong -->
+          <tr v-if="!obatStore.loading && obatStore.stokObat.length === 0">
             <td colspan="8" class="text-center py-4 text-gray-500">
               Tidak ada data stok obat.
             </td>
@@ -70,33 +87,21 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from "vue";
-import axios from "axios";
+import { onMounted } from "vue";
+import { useObatStore } from "../stores/useObatStore";
 
-const stokObat = ref([]);
+const obatStore = useObatStore();
 
-const fetchStokObat = async () => {
-  try {
-    const response = await axios.get("http://127.0.0.1:8000/api/stok-obat");
-    if (response.data.success) {
-      stokObat.value = response.data.data;
-    }
-  } catch (error) {
-    console.error("Gagal mengambil data stok obat:", error);
-  }
-};
+onMounted(() => {
+  obatStore.fetchStokObat();
+});
 
-onMounted(fetchStokObat);
-
-const hapusObat = async (id) => {
+const hapus = async (id) => {
   if (!confirm("Apakah yakin ingin menghapus obat ini?")) return;
 
   try {
-    await axios.delete(`http://127.0.0.1:8000/api/stok-obat/${id}`);
-    // hapus dari frontend juga
-    stokObat.value = stokObat.value.filter((o) => o.id !== id);
+    await obatStore.hapusObat(id);
   } catch (error) {
-    console.error("Gagal menghapus obat:", error);
     alert("Terjadi kesalahan saat menghapus obat.");
   }
 };
@@ -117,6 +122,5 @@ thead th {
 }
 button {
   cursor: pointer;
-  font-size: 1.2rem;
 }
 </style>
