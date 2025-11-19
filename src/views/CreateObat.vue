@@ -26,23 +26,23 @@
       <!-- Satuan -->
       <div>
         <label class="block mb-1 font-semibold">Satuan</label>
-        <input
-          type="text"
-          v-model="form.satuan"
-          class="border rounded w-full px-3 py-2"
-          placeholder="Contoh: tablet, kapsul"
-        />
+        <select v-model="form.satuan" class="border rounded w-full px-3 py-2">
+          <option value="">-- Pilih Satuan --</option>
+          <option v-for="(s, idx) in satuanList" :key="idx" :value="s">
+            {{ s }}
+          </option>
+        </select>
       </div>
 
       <!-- Kategori -->
       <div>
         <label class="block mb-1 font-semibold">Kategori</label>
-        <input
-          type="text"
-          v-model="form.kategori"
-          class="border rounded w-full px-3 py-2"
-          placeholder="Contoh: Analgesik, Antibiotik"
-        />
+        <select v-model="form.kategori" class="border rounded w-full px-3 py-2">
+          <option value="">-- Pilih Kategori --</option>
+          <option v-for="(k, idx) in kategoriList" :key="idx" :value="k">
+            {{ k }}
+          </option>
+        </select>
       </div>
 
       <!-- Expired Date -->
@@ -138,6 +138,32 @@ const resetForm = () => {
   form.harga = 0;
   form.keterangan = "";
 };
+
+const satuanList = [
+  "tablet",
+  "kaplet",
+  "kapsul",
+  "botol",
+  "ml",
+  "vial",
+  "ampul",
+  "tube",
+  "sachet",
+  "pcs",
+  "box",
+];
+
+const kategoriList = [
+  "Analgesik",
+  "Antipiretik",
+  "Antibiotik",
+  "Antihistamin",
+  "Vitamin",
+  "Antiinflamasi",
+  "Obat Luka",
+  "Obat Tetes",
+  "Obat Injeksi",
+];
 
 const submitForm = async () => {
   if (!form.nama_obat || form.stok < 0) {

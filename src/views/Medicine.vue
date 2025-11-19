@@ -48,7 +48,9 @@
             <td class="border px-3 py-2 text-center">
               {{ obat.expired_date }}
             </td>
-            <td class="border px-3 py-2 text-right">{{ obat.harga }}</td>
+            <td class="border px-3 py-2 text-left">
+              Rp {{ Number(obat.harga).toLocaleString("id-ID") }}
+            </td>
 
             <td class="border px-3 py-2 text-center flex justify-center">
               <button

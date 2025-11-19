@@ -26,6 +26,28 @@ export const useObatStore = defineStore("obat", {
       }
     },
 
+    async createObat(formData) {
+      this.loading = true;
+      this.error = null;
+
+      try {
+        const res = await api.post("/stok-obat", formData);
+
+        // Tambahkan ke list jika mau update otomatis
+        if (res.data?.success && res.data?.data) {
+          this.stokObat.push(res.data.data);
+        }
+
+        return true;
+      } catch (err) {
+        console.error("Gagal membuat obat:", err);
+        this.error = err.response?.data?.message || "Gagal membuat obat.";
+        return false;
+      } finally {
+        this.loading = false;
+      }
+    },
+
     async hapusObat(id) {
       try {
         await api.delete(`/stok-obat/${id}`);
