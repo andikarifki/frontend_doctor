@@ -60,22 +60,26 @@
 import { ref, onMounted } from "vue";
 import { usePasienStore } from "@/stores/pasienStore";
 import { usePraktikStore } from "@/stores/praktikStore";
+import { useMedicalRecordStore } from "../stores/medicalRecordStore";
 
 const pasienStore = usePasienStore();
 const praktikStore = usePraktikStore();
+const medicalRecordStore = useMedicalRecordStore();
 
 const totalPasien = ref(0);
 const totalPraktik = ref(0);
+const totalMedicalRecord = ref(0);
 
 const fetchDashboardData = async () => {
   try {
-    // ambil pasien
     await pasienStore.fetchPatients();
     totalPasien.value = pasienStore.patients.length;
 
-    // ambil praktik dari praktikStore
     await praktikStore.fetchPraktikList();
     totalPraktik.value = praktikStore.praktikList.length;
+
+    await medicalRecordStore.fetchAllMedicalRecords();
+    totalMedicalRecord.value = medicalRecordStore.allRecords.length;
   } catch (err) {
     console.error("Gagal fetch data dashboard:", err);
   }

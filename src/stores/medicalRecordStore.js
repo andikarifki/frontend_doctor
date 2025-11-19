@@ -5,11 +5,13 @@ import api from "@/api/axios";
 export const useMedicalRecordStore = defineStore("medicalRecord", {
   state: () => ({
     records: [],
+    allRecords: [], // ⭐ baru untuk dashboard
     loading: false,
     error: "",
   }),
 
   actions: {
+    // 📌 Fetch rekam medis berdasarkan pasien ID
     async fetchMedicalRecords(pasienId) {
       if (!pasienId) return;
 
@@ -28,6 +30,23 @@ export const useMedicalRecordStore = defineStore("medicalRecord", {
       }
     },
 
+    // 📌 Fetch SEMUA rekam medis untuk Dashboard
+    async fetchAllMedicalRecords() {
+      this.loading = true;
+      this.error = "";
+
+      try {
+        const res = await api.get(`/medical-records`);
+        this.allRecords = res.data.data || [];
+      } catch (err) {
+        console.error(err);
+        this.error = "Gagal memuat semua rekam medis";
+      } finally {
+        this.loading = false;
+      }
+    },
+
+    // 📌 Tambah record
     async tambahRecord(form, pasienId) {
       try {
         const payload = {
@@ -43,6 +62,7 @@ export const useMedicalRecordStore = defineStore("medicalRecord", {
       }
     },
 
+    // 📌 Hapus record
     async hapusRecord(id) {
       try {
         await api.delete(`/medical-records/${id}`);
