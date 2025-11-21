@@ -4,14 +4,14 @@
     class="min-h-screen py-10 px-4 md:px-8 lg:px-12 bg-gray-100 text-gray-800"
   >
     <!-- LOADING INDICATOR -->
-    <div class="max-w-5xl mx-auto mb-6 text-center">
+    <div class="max-w-4xl mx-auto mb-6 text-center">
       <transition name="fade">
         <div
           v-if="praktikStore.loading && !editingItem"
-          class="inline-flex items-center gap-3 bg-white px-5 py-3 rounded-xl shadow border border-blue-200"
+          class="inline-flex items-center gap-3 bg-white px-6 py-3 rounded-xl shadow border border-blue-200"
         >
           <svg
-            class="animate-spin w-5 h-5 text-blue-500"
+            class="animate-spin w-6 h-6 text-blue-500"
             xmlns="http://www.w3.org/2000/svg"
             fill="none"
             viewBox="0 0 24 24"
@@ -24,95 +24,29 @@
               d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0l3.5 3m-3.5-3v5h.582"
             />
           </svg>
-          <span class="font-medium text-blue-700">
-            Memproses permintaan...
-          </span>
+          <span class="font-medium text-blue-700 text-sm"> Memproses... </span>
         </div>
       </transition>
     </div>
 
-    <main class="max-w-5xl mx-auto">
-      <!-- FORM TAMBAH PRAKTIK -->
-      <section
-        class="bg-white p-8 rounded-2xl shadow-sm border border-gray-200 mb-12"
-      >
-        <h2 class="text-2xl font-bold text-gray-800 mb-6">
-          Tambah Lokasi Praktik 🩺
-        </h2>
-
-        <form
-          @submit.prevent="addPraktik"
-          class="grid grid-cols-1 md:grid-cols-4 gap-5 items-end"
+    <main class="max-w-4xl mx-auto">
+      <!-- BUTTON TAMBAH -->
+      <div class="flex items-center justify-start mb-6">
+        <button
+          @click="showAddModal = true"
+          class="px-5 py-2.5 bg-blue-600 text-white rounded-xl shadow hover:bg-blue-700 transition-all flex items-center gap-2"
         >
-          <div class="md:col-span-3">
-            <label class="text-sm font-semibold text-gray-700 mb-2 block"
-              >Lokasi Praktik</label
-            >
-            <input
-              v-model="newLocation"
-              type="text"
-              placeholder="Contoh: Klinik Harapan Sehat"
-              class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-400 outline-none"
-            />
-          </div>
-
-          <button
-            type="submit"
-            :disabled="praktikStore.loading"
-            class="w-full px-6 py-3 bg-blue-600 text-white font-bold rounded-xl shadow hover:bg-blue-700 transition disabled:bg-gray-400"
-          >
-            <span
-              v-if="praktikStore.loading"
-              class="flex items-center justify-center gap-2"
-            >
-              <svg
-                class="animate-spin w-5 h-5"
-                xmlns="http://www.w3.org/2000/svg"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-                stroke-width="2"
-              >
-                <path
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0l3.5 3m-3.5-3v5h.582"
-                />
-              </svg>
-              Menyimpan...
-            </span>
-            <span v-else>Tambah</span>
-          </button>
-        </form>
-
-        <!-- ERROR BOX -->
-        <transition name="fade">
-          <div
-            v-if="formErrors"
-            class="mt-6 p-4 bg-red-50 border-l-4 border-red-500 rounded-lg"
-          >
-            <p class="font-semibold text-red-700">Validasi gagal:</p>
-            <ul class="mt-2 ml-4 list-disc text-red-600 text-sm">
-              <li v-for="(error, key) in formErrors" :key="key">
-                <span class="font-bold">{{ key }}</span
-                >:
-                {{ error.join(", ") }}
-              </li>
-            </ul>
-          </div>
-        </transition>
-      </section>
-
-      <!-- TABEL -->
-      <h2 class="text-2xl font-bold text-gray-800 mb-5">Daftar Praktik 📅</h2>
+          <span class="text-lg">＋</span> Tambah Praktik
+        </button>
+      </div>
 
       <!-- LOADING TABLE -->
       <div
         v-if="praktikStore.loading && praktikStore.praktikList.length === 0"
-        class="flex flex-col items-center justify-center py-16 bg-white rounded-2xl shadow-sm border border-gray-200"
+        class="flex flex-col items-center justify-center py-16 bg-white rounded-2xl shadow border border-gray-200"
       >
         <svg
-          class="animate-spin w-12 h-12 mb-4 text-blue-500"
+          class="animate-spin w-10 h-10 mb-4 text-blue-500"
           xmlns="http://www.w3.org/2000/svg"
           fill="none"
           viewBox="0 0 24 24"
@@ -140,10 +74,10 @@
       <!-- TABEL LIST -->
       <div
         v-else-if="praktikStore.praktikList.length"
-        class="overflow-x-auto bg-white rounded-2xl shadow-sm border border-gray-200"
+        class="overflow-hidden bg-white rounded-2xl shadow border border-gray-200"
       >
         <table class="min-w-full">
-          <thead class="bg-gray-50 border-b">
+          <thead class="bg-gray-100 border-b">
             <tr>
               <th
                 class="px-6 py-4 text-left text-xs uppercase font-bold text-gray-600"
@@ -153,10 +87,10 @@
               <th
                 class="px-6 py-4 text-left text-xs uppercase font-bold text-gray-600"
               >
-                Lokasi
+                Lokasi Praktik
               </th>
               <th
-                class="px-6 py-4 text-left text-xs uppercase font-bold text-gray-600"
+                class="px-6 py-4 text-center text-xs uppercase font-bold text-gray-600"
               >
                 Aksi
               </th>
@@ -164,22 +98,45 @@
           </thead>
 
           <tbody>
-            <template v-for="(item, index) in praktikStore.praktikList">
-              <tr class="hover:bg-gray-50">
+            <template
+              v-for="(item, index) in praktikStore.praktikList"
+              :key="item.id"
+            >
+              <tr class="hover:bg-gray-50 transition border-b">
                 <td class="px-6 py-4 font-medium">{{ index + 1 }}</td>
                 <td class="px-6 py-4">{{ item.lokasi_praktik || "—" }}</td>
-                <td class="px-6 py-4 space-x-4">
-                  <button
-                    @click="startEdit(item)"
-                    class="text-blue-600 hover:text-blue-800 font-semibold"
-                  >
-                    Edit
+                <td class="px-6 py-4 text-center space-x-4">
+                  <button @click="startEdit(item)">
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      class="w-5 h-5 text-blue-600 hover:text-blue-800"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                      stroke-width="2"
+                    >
+                      <path
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        d="M16.862 3.487a2.25 2.25 0 013.182 3.182L7.125 19.587a4.5 4.5 0 01-1.591 1.01l-3.06 1.02 1.02-3.06a4.5 4.5 0 011.01-1.592L16.862 3.487z"
+                      />
+                    </svg>
                   </button>
-                  <button
-                    @click="deleteItem(item.id)"
-                    class="text-red-600 hover:text-red-800 font-semibold"
-                  >
-                    Hapus
+                  <button @click="deleteItem(item.id)">
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      class="w-5 h-5 text-red-600 hover:text-red-800"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                      stroke-width="2"
+                    >
+                      <path
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6M9 7h6m-7 0l1-3h4l1 3"
+                      />
+                    </svg>
                   </button>
                 </td>
               </tr>
@@ -196,27 +153,28 @@
                   >
                     <div class="md:col-span-3">
                       <label
-                        class="text-sm font-semibold text-gray-700 mb-2 block"
-                        >Lokasi Praktik</label
+                        class="text-sm font-semibold text-gray-700 mb-1 block"
                       >
+                        Lokasi Praktik
+                      </label>
                       <input
                         v-model="editLocation"
                         type="text"
-                        class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-400"
+                        class="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-400"
                       />
                     </div>
 
                     <div class="flex gap-3">
                       <button
                         type="submit"
-                        class="flex-1 px-6 py-3 bg-green-600 text-white font-bold rounded-xl hover:bg-green-700"
+                        class="flex-1 px-6 py-2.5 bg-green-600 text-white font-semibold rounded-xl hover:bg-green-700 transition"
                       >
                         Simpan
                       </button>
                       <button
                         type="button"
                         @click="cancelEdit"
-                        class="flex-1 px-6 py-3 bg-gray-400 text-white font-bold rounded-xl hover:bg-gray-500"
+                        class="flex-1 px-6 py-2.5 bg-gray-400 text-white font-semibold rounded-xl hover:bg-gray-500 transition"
                       >
                         Batal
                       </button>
@@ -229,46 +187,37 @@
         </table>
       </div>
 
-      <!-- EMPTY STATE -->
+      <!-- EMPTY -->
       <div
         v-else
-        class="text-center py-16 bg-white rounded-2xl shadow-sm border border-gray-200"
+        class="text-center py-20 bg-white rounded-2xl shadow border border-gray-200"
       >
-        <h3 class="text-xl font-bold text-gray-700">Belum ada praktik</h3>
-        <p class="text-gray-500 mt-2">
-          Silakan tambah praktik terlebih dahulu.
+        <p class="text-gray-500 text-lg">
+          Belum ada praktik.
+          <br />Silakan tambah lokasi praktik terlebih dahulu.
         </p>
       </div>
     </main>
+
+    <!-- MODAL TAMBAH -->
+    <PraktikAddModal
+      v-if="showAddModal"
+      :visible="showAddModal"
+      @close="showAddModal = false"
+    />
   </div>
 </template>
 
 <script setup>
 import { ref, onMounted } from "vue";
 import { usePraktikStore } from "@/stores/praktikStore";
-import { storeToRefs } from "pinia";
+import PraktikAddModal from "@/components/PraktikAddModal.vue";
 
 const praktikStore = usePraktikStore();
-const { praktikList } = storeToRefs(praktikStore);
+const showAddModal = ref(false);
 
-const newLocation = ref("");
 const editLocation = ref("");
-const formErrors = ref(null);
 const editingItem = ref(null);
-
-const addPraktik = async () => {
-  const payload = {
-    lokasi_praktik: newLocation.value || null,
-  };
-  const res = await praktikStore.createPraktik(payload);
-
-  if (res?.validationErrors) {
-    formErrors.value = res.validationErrors;
-  } else {
-    newLocation.value = "";
-    formErrors.value = null;
-  }
-};
 
 const startEdit = (item) => {
   editingItem.value = { ...item };
@@ -276,26 +225,17 @@ const startEdit = (item) => {
 };
 
 const updatePraktik = async () => {
-  if (!editingItem.value) return;
-
-  const payload = {
-    lokasi_praktik: editLocation.value || null,
-  };
-
+  const payload = { lokasi_praktik: editLocation.value || null };
   const res = await praktikStore.updatePraktik(editingItem.value.id, payload);
 
-  if (res?.validationErrors) {
-    formErrors.value = res.validationErrors;
-  } else {
+  if (!res?.validationErrors) {
     editingItem.value = null;
-    formErrors.value = null;
   }
 };
 
 const cancelEdit = () => {
   editingItem.value = null;
   editLocation.value = "";
-  formErrors.value = null;
 };
 
 const deleteItem = async (id) => {
@@ -309,14 +249,13 @@ onMounted(() => {
 });
 </script>
 
-<style>
+<style scoped>
 .fade-enter-active,
 .fade-leave-active {
-  transition: opacity 0.3s ease, transform 0.3s ease;
+  transition: opacity 0.25s ease;
 }
 .fade-enter-from,
 .fade-leave-to {
   opacity: 0;
-  transform: translateY(-5px);
 }
 </style>
