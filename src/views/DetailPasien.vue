@@ -271,6 +271,7 @@ const toggleEdit = () => {
 const saveChanges = async () => {
   try {
     const payload = {
+      nik: editableInfo.value.NIK,
       nama: editableInfo.value.Nama,
       tanggal: editableInfo.value["Tanggal Lahir"],
       status: editableInfo.value.Status,
