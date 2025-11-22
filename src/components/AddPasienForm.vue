@@ -1,19 +1,18 @@
 <template>
   <form @submit.prevent="handleSubmit" class="space-y-6">
-    <!-- ✅ Pesan API -->
+    <!-- 💬 Pesan API -->
     <div
       v-if="apiMessage"
       :class="messageClass"
       class="p-3 rounded-lg font-medium transition-all"
     >
       {{ apiMessage }}
+
       <ul
-        v-if="validationErrors.length > 0"
+        v-if="validationErrors.length"
         class="mt-2 list-disc list-inside text-sm text-red-600"
       >
-        <li v-for="(error, index) in validationErrors" :key="index">
-          {{ error }}
-        </li>
+        <li v-for="(err, i) in validationErrors" :key="i">{{ err }}</li>
       </ul>
     </div>
 
@@ -21,68 +20,71 @@
       Data Pasien
     </h3>
 
-    <!-- CONTAINER GRID DIUBAH MENJADI SATU KOLOM (GRID-COLS-1) DI SEMUA LAYAR -->
+    <!-- FORM -->
     <div class="grid grid-cols-1 gap-4">
-      <!-- 💳 NIK (Nomor Induk Kependudukan) -->
+      <!-- NIK -->
       <div>
-        <label for="nik" class="block text-sm font-medium text-gray-700"
-          >NIK (16 Digit)</label
+        <label class="block text-sm font-medium text-gray-700"
+          >NIK (16 digit)</label
         >
         <input
-          type="text"
-          id="nik"
           v-model="form.nik"
-          required
-          placeholder="Masukkan 16 digit NIK"
+          type="text"
           minlength="16"
           maxlength="16"
-          class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-3 focus:ring-blue-500 focus:border-blue-500"
+          required
+          placeholder="Masukkan NIK"
+          class="mt-1 block w-full border border-gray-300 rounded-md p-3"
         />
       </div>
+
+      <!-- Nama -->
       <div>
-        <label for="nama" class="block text-sm font-medium text-gray-700"
+        <label class="block text-sm font-medium text-gray-700"
           >Nama Lengkap</label
         >
         <input
-          type="text"
-          id="nama"
           v-model="form.nama"
+          type="text"
           required
-          placeholder="Masukkan Nama"
-          class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-3 focus:ring-blue-500 focus:border-blue-500"
+          placeholder="Nama pasien"
+          class="mt-1 block w-full border border-gray-300 rounded-md p-3"
         />
       </div>
+
+      <!-- Tanggal -->
       <div>
-        <label for="tanggal" class="block text-sm font-medium text-gray-700"
+        <label class="block text-sm font-medium text-gray-700"
           >Tanggal Lahir</label
         >
         <input
-          type="date"
-          id="tanggal"
           v-model="form.tanggal"
+          type="date"
           required
-          class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-3 focus:ring-blue-500 focus:border-blue-500"
+          class="mt-1 block w-full border border-gray-300 rounded-md p-3"
         />
       </div>
+
+      <!-- Telepon -->
       <div>
-        <label for="no_tlp" class="block text-sm font-medium text-gray-700"
+        <label class="block text-sm font-medium text-gray-700"
           >No Telepon</label
         >
         <input
-          type="text"
-          id="no_tlp"
           v-model="form.no_tlp"
+          type="text"
           required
-          placeholder="Masukkan Nomor Telepon"
-          class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-3 focus:ring-blue-500 focus:border-blue-500"
+          placeholder="08xxxxxxxxxx"
+          class="mt-1 block w-full border border-gray-300 rounded-md p-3"
         />
       </div>
     </div>
+
     <div class="pt-4 border-t">
       <button
         type="submit"
         :disabled="store.loading"
-        class="w-full py-3 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 disabled:bg-gray-400 transition"
+        class="w-full py-3 text-white bg-green-600 hover:bg-green-700 rounded-md shadow-sm disabled:bg-gray-400 transition"
       >
         {{ store.loading ? "Memproses..." : "Simpan Data Pasien" }}
       </button>
@@ -91,13 +93,14 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from "vue";
+import { ref, computed } from "vue";
+import { useRouter } from "vue-router";
 import { usePasienStore } from "@/stores/pasienStore";
-import api from "@/api/axios";
 
+const router = useRouter();
 const store = usePasienStore();
 
-// 🧾 Data Form
+// 🔧 Data Form
 const form = ref({
   nik: "",
   nama: "",
@@ -106,22 +109,19 @@ const form = ref({
   no_tlp: "",
 });
 
-// 🔔 State feedback API
 const apiMessage = ref(null);
 const validationErrors = ref([]);
 
-// 🎨 Styling pesan API
 const messageClass = computed(() => {
-  if (store.apiError || validationErrors.value.length > 0) {
+  if (validationErrors.value.length > 0) {
     return "bg-red-100 text-red-700 border border-red-400";
   }
-  if (store.apiResponse && store.apiResponse.status < 400) {
+  if (store.apiResponse) {
     return "bg-green-100 text-green-700 border border-green-400";
   }
   return "";
 });
 
-// 🔄 Reset form
 const resetForm = () => {
   form.value = {
     nik: "",
@@ -130,29 +130,24 @@ const resetForm = () => {
     status: "Aktif",
     no_tlp: "",
   };
-  validationErrors.value = [];
 };
 
-// 🚀 Submit form
 const handleSubmit = async () => {
   apiMessage.value = null;
-  store.apiError = null;
-  store.apiResponse = null;
   validationErrors.value = [];
 
   try {
     await store.addPatient(form.value);
-    const responseData = store.apiResponse?.data;
-    apiMessage.value =
-      responseData?.message || "✅ Pasien berhasil ditambahkan!";
-    resetForm();
-  } catch (error) {
-    apiMessage.value = store.apiError || "❌ Terjadi kesalahan saat menyimpan.";
 
-    if (error.response?.status === 422) {
-      const errors = error.response.data.errors || {};
+    // Sukses → langsung redirect
+    router.push({ name: "Pasien" });
+  } catch (err) {
+    apiMessage.value = "⚠️ Gagal menyimpan data.";
+
+    if (err.response?.status === 422) {
+      const errors = err.response.data.errors || {};
       validationErrors.value = Object.values(errors).flat();
-      apiMessage.value = "⚠️ Validasi Gagal! Periksa kembali input Anda.";
+      apiMessage.value = "⚠️ Validasi gagal, periksa kembali data.";
     }
   }
 };

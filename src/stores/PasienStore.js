@@ -9,69 +9,100 @@ export const usePasienStore = defineStore("pasien", {
   }),
 
   getters: {
-    // Pasien yang sudah difilter berdasarkan searchQuery (Nama & NIK)
     filteredPatients: (state) => {
-      const search = state.searchQuery.trim().toLowerCase();
-      if (!search) return state.patients;
+      const s = state.searchQuery.trim().toLowerCase();
+      if (!s) return state.patients;
 
       return state.patients.filter((p) => {
-        const nama = String(p.nama || "").toLowerCase();
-        const nik = String(p.nik || ""); // NIK jadi string
-        return nama.includes(search) || nik.includes(search);
+        return (
+          String(p.nama || "")
+            .toLowerCase()
+            .includes(s) || String(p.nik || "").includes(s)
+        );
       });
     },
   },
 
   actions: {
-    // Fungsi umum untuk API
+    // ====== UNIVERSAL API CALL ======
     async executeApiCall(method, endpoint, data = null) {
       this.loading = true;
       try {
-        const response = await api({ method, url: endpoint, data });
-        return response.data?.data || response.data || [];
+        const response = await api({
+          method,
+          url: endpoint,
+          data,
+        });
+
+        return response.data; // semua fungsi cukup baca ini
       } catch (error) {
-        console.error("API Error:", error);
-        return [];
+        console.error("API Error:", error.response?.data || error);
+        throw error;
       } finally {
         this.loading = false;
       }
     },
 
-    // Ambil semua pasien
+    // ====== GET LIST PASIEN ======
     async fetchPatients() {
-      this.patients = await this.executeApiCall("get", "pasien");
+      try {
+        const res = await this.executeApiCall("get", "pasien");
+
+        console.log("DEBUG GET PASIEN:", res);
+
+        // Fix format Laravel
+        if (Array.isArray(res.data)) {
+          this.patients = res.data;
+        } else if (Array.isArray(res)) {
+          this.patients = res;
+        } else {
+          console.warn("Format API tidak dikenali, set empty");
+          this.patients = [];
+        }
+      } catch (error) {
+        console.error("Gagal fetch pasien:", error);
+        this.patients = [];
+      }
+
       this.searchQuery = "";
     },
 
-    // Set query pencarian
-    setSearchQuery(query) {
-      this.searchQuery = query;
-    },
-
-    // Tambah pasien
+    // ===== CREATE PASIEN =====
     async addPatient(formData) {
-      await this.executeApiCall("post", "pasien", formData);
-      await this.fetchPatients();
+      try {
+        const res = await this.executeApiCall("post", "pasien", formData);
+
+        console.log("CREATE SUCCESS:", res);
+
+        // setelah create refresh list
+        await this.fetchPatients();
+
+        return res; // penting untuk digunakan di form
+      } catch (error) {
+        console.error("Gagal create:", error.response?.data);
+        throw error;
+      }
     },
 
-    // Update pasien
+    // ===== UPDATE PASIEN =====
     async updatePatient(id, formData) {
       await this.executeApiCall("put", `pasien/${id}`, formData);
       await this.fetchPatients();
     },
 
-    // Hapus pasien
+    // ===== DELETE PASIEN =====
     async deletePatient(id) {
       await this.executeApiCall("delete", `pasien/${id}`);
       await this.fetchPatients();
     },
-    // pasienStore.js
 
+    // ===== GET DETAIL PASIEN =====
     async getPatientById(id) {
       this.loading = true;
       try {
-        const response = await api.get(`pasien/show/${id}`);
-        return response.data.data; // return langsung datanya
+        const res = await api.get(`pasien/show/${id}`);
+
+        return res.data?.data || null;
       } catch (error) {
         console.error("Error get detail pasien:", error);
         throw error;
